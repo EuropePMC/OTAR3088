@@ -20,15 +20,22 @@ By incorporating these new entity types, the project seeks to provide higher con
 | Folder | Description |
 OTAR3088/
 │
-├── Entity-Extraction-Modular-pipeline/      # Main modular pipeline for biomedical NER
+├── Entity-Extraction-Modular-pipeline/      # - - Main modular pipeline for biomedical NER - -
 │   ├── steps/                               
 │   ├── configs/                             # YAML configuration files (Hydra-based)
 │   ├── pipelines/                           # Data preprocessing and model training pipelines
 │   ├── utils/                               # Helper functions and utilities
 │   └── README.md                            # Documentation for this module (multi-page)
 │
-├── Data_mining/                             # Scripts & notebooks for dataset exploration or sourcing
-├── Data_extraction-Query/                   # Query-based data extraction workflows
+├── Data_mining/                             # - - Dataset exploration or sourcing - - 
+│   ├── CeLLaTe/                             # Notebooks relating to CeLLaTe data processing  
+│   ├── adverse_event/                       # Exploration of PHEE dataset        
+│   ├── chembl_sql/cell_line/                # SQL utils for extraction of data from ChEMBL
+│   ├── labelstudio_e2e/                     # Processing for loading of pre-annotated texts into labelstudio
+│   ├── trial_to_paper/                      # Exploratory work linking drug trials to papers
+│   ├── variant/                             # Regex / NER model testing for variant desc capture
+│
+├── Data_extraction-Query/                   # - - Query-based data extraction workflows - - 
 ├── Scripts/                                 # General-purpose or legacy scripts
 └── README.md                                # Central project documentation (this file)
 
