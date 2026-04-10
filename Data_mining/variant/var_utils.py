@@ -25,6 +25,10 @@ class SectionResult:
 
 # ── ePMC loading / parsing functions ───────────────────────────────────────────────────
 def query_epmc(query: str, page_size: int = 10) -> List:
+    """
+    Search for 'x' paper results on passing a query string
+    E.g. output_list = query_epmc(query='HeLa cells', page_size=5)
+    """
     query = f"{query} HAS_FT:Y AND OPEN_ACCESS:Y"
     url = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
     params = {
