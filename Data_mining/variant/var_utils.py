@@ -275,8 +275,33 @@ def get_context(text: str, entity: Entity, window: int = 5) -> str:
     right = words[last + 1 : last + 1 + window]
     return f"…{' '.join(left)} ***{' '.join(mid)}*** {' '.join(right)}…"
 
-# ── Regex-related funcs ──────────────────────────────────────────────────────────
+def run_gene_ner_chunked(tokenizer, text: str, pipe, max_tokens: int = 400) -> list[dict]:
+    """
+    Chunk text at token boundaries (not char boundaries) to stay safely
+    under the 512-token position embedding limit.
+    """
+    # Tokenize with char offset mapping, no special tokens
+    enc = tokenizer(
+        text,
+        return_offsets_mapping=True,
+        add_special_tokens=False
+    )
+    token_ids   = enc["input_ids"]
+    offset_map  = enc["offset_mapping"]   # (char_start, char_end) per token
+    results = []
+    for chunk_start in range(0, len(token_ids), max_tokens):
+        chunk_offsets = offset_map[chunk_start : chunk_start + max_tokens]
+        char_start    = chunk_offsets[0][0]
+        char_end      = chunk_offsets[-1][1]
+        chunk_text    = text[char_start:char_end]
+        for ent in pipe(chunk_text):
+            ent = dict(ent)
+            ent["start"] += char_start   # remap to original text offsets
+            ent["end"]   += char_start
+            results.append(ent)
+    return results
 
+# ── Regex-related funcs ──────────────────────────────────────────────────────────
 # Map look-alike characters -> ASCII equivalents
 HOMOGLYPH_MAP = str.maketrans({
     0x0441: 'c',   # Cyrillic с → c
@@ -402,10 +427,10 @@ def find_star_alleles(text: str, gene_spans: list[tuple]) -> list[tuple]:
     """
     results = []
     for word, g_start, g_end, label in gene_spans:
-        m = _STAR_SUFFIX.match(text, g_end)   # anchored at gene end position
-        if m:
-            full_span = text[g_start:m.end()]
-            results.append((full_span, g_start, m.end(), "StarAllele"))
+        match = _STAR_SUFFIX.match(text, g_end)   # anchored at gene end position
+        if match:
+            full_span = text[g_start:match.end()]
+            results.append((full_span, g_start, match.end(), "StarAllele"))
         else:
-            results.append((word, g_start, g_end, label))
+            results.append((word, g_start, g_end, label)) # keep geneprotein capture
     return results
