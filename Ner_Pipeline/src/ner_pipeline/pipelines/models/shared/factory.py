@@ -3,14 +3,14 @@ import os
 import math
 from omegaconf import DictConfig
 import torch.nn as nn
-from datasets import Dataset
+from datasets import Dataset, DatasetDict
 from transformers import TrainingArguments
 
 
 
 
 
-def split_dataset(example:Dataset, test_size:float = 0.2):
+def split_dataset(example:Dataset, test_size:float = 0.2) -> DatasetDict:
   """
   Splits a dataset into train and validation sets
   Args:
@@ -24,6 +24,7 @@ def split_dataset(example:Dataset, test_size:float = 0.2):
   example["validation"] = example["test"]
   example.pop("test")
   return example
+
 
 def format_model_checkpoint_name(ckpt:str):
 
@@ -42,14 +43,12 @@ def format_model_checkpoint_name(ckpt:str):
 
 
 def build_training_args(cfg:DictConfig, output_dir:str):
-  hf_checkpoint_name = cfg.model.model_name_or_path
-  checkpoint_name = format_model_checkpoint_name(hf_checkpoint_name)
   report_to = "wandb" if cfg.use_wandb else "none"
   return TrainingArguments(
-      output_dir=f"{output_dir}/{checkpoint_name}",
-      logging_dir=f"{output_dir}/{checkpoint_name}/logs",
+      output_dir=output_dir,
+      logging_dir=f"{output_dir}/logs",
       report_to = report_to,
-      **cfg.model.args
+      **cfg.task.args
   )
 
 
@@ -79,23 +78,24 @@ def compute_training_steps(args:TrainingArguments, train_dataset:Dataset):
 
 
 
-def compute_warmup_steps(num_training_steps, warmup_ratio=0.1):
-    """Return warmup steps given a ratio (e.g., 0.1 = 10%)."""
+def compute_warmup_steps(num_training_steps, warmup_ratio):
+    "Return warmup steps given a ratio (e.g., 0.1 = 10%)."
     return int(num_training_steps * warmup_ratio)
-
 
 
 def extract_model_backbone(model: nn.Module):
     """
     Return (backbone_name, backbone) for common architectures.
     """
+    supported = {"bert", "roberta", "distilbert"}
     if hasattr(model, "bert"):
         return "bert", model.bert
     if hasattr(model, "roberta"):
         return "roberta", model.roberta
     if hasattr(model, "distilbert"):
         return "distilbert", model.distilbert
-    raise ValueError("Unsupported Bert backbone. Inspect model to find name of backbone.")
+    raise ValueError("Unsupported Bert backbone. Inspect model to find name of backbone.",
+                    f"Supported backbones are: {supported}")
 
 
 
@@ -109,7 +109,6 @@ def extract_encoder_layers(model: nn.Module):
   elif model_name == "distilbert":
     encoder_layer = backbone.transformer.layer
   return encoder_layer
-
 
 
 def count_trainable_params(model: nn.Module):
