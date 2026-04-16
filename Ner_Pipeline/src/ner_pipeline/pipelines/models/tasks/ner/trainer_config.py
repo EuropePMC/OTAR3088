@@ -1,14 +1,17 @@
+from enum import Enum
+from dataclasses import dataclass
+
 from typing import (
                     List, Dict, 
                     Union, Optional, 
                     Callable, Any,
-                    Type
+                    Type, Literal
                 )
-from dataclasses import dataclass
+
 
 from transformers import DataCollatorForTokenClassification
-    
-from  ...shared.trainer_config_base import BaseTrainerKwargs
+
+from  ...shared.trainer_config_base import BaseTrainerKwargs, HFModelConfig
 from ...shared.trainer_base import HFTrainingOrchestratorConfig
 
 
@@ -30,6 +33,8 @@ class NerTrainingOrchestratorConfig(HFTrainingOrchestratorConfig):
     pass
 
 
+
+
 @dataclass
 class NerPredictions:
     true_labels: List[List[str]]
@@ -37,4 +42,16 @@ class NerPredictions:
     label_names: List[str]
 
 
+@dataclass(kw_only=True)
+class NerModelConfig(HFModelConfig):
+    num_labels: int
+    id2label: Dict[int, str]
+    label2id: Dict[str, int]
+    ner_head_type: Literal["standard", "crf"] 
+
+
+class NerTrainerType(str, Enum):
+    STANDARD = "base"
+    CRF = "crf"
+    WEIGHTED = "weighted"
 

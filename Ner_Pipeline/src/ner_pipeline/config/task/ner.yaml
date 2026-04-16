@@ -1,7 +1,21 @@
 
 
+#data
+data:
+  name: CeLLaTe_no_vague
+  version: 1.0
+  hf_path: OTAR3088/CeLLaTe_V1.0_no_vague_IOB
+  text_col: tokens
+  label_col: tags
+  source_type: hf
+
+#data attributes
+ner_tag_list: [B-CellLine, I-CellLine, B-CellType, I-CellType, B-Tissue, I-Tissue, O]
+label_names: [CellLine, CellType, Tissue]
+
 # Model & Tokenizer
 model_name_or_path: Mardiyyah/cellate2.0-tapt_base-LR_5e-05
+
 
 # Training hyperparameters
 args:
@@ -29,6 +43,7 @@ args:
   greater_is_better: true
   group_by_length: true
   do_train: true
+  label_smoothing_factor: 0.0
   #gradient_accumulation_steps: 2
 
   # Optional params 
@@ -36,12 +51,20 @@ args:
   seed: ${seed}
   data_seed: ${seed}
 
+apply_downsample: false
+downsample_ratio: 0.2
+
+#pipeline specific modelling params
+#trainer initialiser
+trainer_type: base #different from model_type. Current Options[base, crf, weighted]
+
+#model builder
+ner_head_type: standard #different from trainer_type. Current Options[standard, crf]
+
+## Data augmentation using gazetters
 use_data_aug: false
 data_aug_method: gazetteer
 max_ent_per_type: 5000
-aug_prob: 0.4
+aug_prob: 0.5
 
-use_weighted_trainer: false
-
-ner_tag_list: [B-CellLine, I-CellLine, B-CellType, I-CellType, B-Tissue, I-Tissue, O]
-label_names: [CellLine, CellType, Tissue]
+#use_weighted_trainer: false
