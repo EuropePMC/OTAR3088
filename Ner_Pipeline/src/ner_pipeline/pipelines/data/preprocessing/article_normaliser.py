@@ -3,7 +3,7 @@ from ast import literal_eval
 
 from dataclasses import dataclass
 from typing import (
-                    List, Dict, Tuple
+                    List, Dict, Tuple,
                     Union, Optional, Any, 
                     Callable, Literal
                     )
