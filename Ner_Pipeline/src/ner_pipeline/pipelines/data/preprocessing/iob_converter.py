@@ -72,7 +72,7 @@ class IOBConverter(ABC):
     all_tokens = []
     all_iob_tags = []
 
-    for sentences, entities in zip(batch[self.config.schema.text_col], batch[self.config.schema.label_col]):
+    for sentences, entities in zip(batch[self.config.schema.text_col], batch[self.config.schema.entity_col]):
       tokens, iob_tags = self._process_single_sentence(sentences, entities)
       all_tokens.append(tokens)
       all_iob_tags.append(iob_tags)
