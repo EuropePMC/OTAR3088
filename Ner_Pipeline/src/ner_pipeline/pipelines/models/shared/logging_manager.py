@@ -1,5 +1,5 @@
 
-
+from typing import List
 from pathlib import Path
 from abc import ABC, abstractmethod
 from omegaconf import DictConfig, OmegaConf
@@ -18,7 +18,7 @@ class BaseLoguruHelper:
     """
     """
 
-    def __init__(self, cfg:DictConfig):
+    def __init__(self, cfg:DictConfig, base_dir:str=None, run_id=None):
         self.cfg = cfg
         self.lr = cfg.lr
         self.data_name = cfg.task.data.name
@@ -28,6 +28,7 @@ class BaseLoguruHelper:
         self.model_architecture = format_model_checkpoint_name(cfg.task.model_name_or_path)
         self.task_type = cfg.task_type
         self.training_strategy = cfg.training_strategy
+        #self.weighted_trainer = getattr(cfg.task, "use_weighted_trainer", False)
 
         self.ner_head_type = getattr(cfg.task, "ner_head_type", "standard")
         self.trainer_type = getattr(cfg.task, "trainer_type", "base")
@@ -36,6 +37,12 @@ class BaseLoguruHelper:
         self.data_aug_method = getattr(cfg.task, "data_aug_method", None)
 
         self.training_kwargs = getattr(cfg, "training_kwargs", "")
+
+        #only used if running wandb sweep
+        self.run_id = run_id
+
+        #where to save logs to. Defaults to path.cwd if not defined
+        self.base_dir = base_dir
 
         self._is_configured = False
 
@@ -65,21 +72,28 @@ class BaseLoguruHelper:
             return
         
         self._log_filename, self._log_dir = self._generate_log_filename_and_log_dir()
+        
         self._setup_sink(self._log_filename, self._log_dir)
         self._is_configured = True
         
         
 
-    def _setup_sink(self, log_filename:str, log_dir:Path) -> None:
+    def _setup_sink(self, log_filename:List, log_dir:Path) -> None:
         print(f"Logging dir set to: {log_dir}")
+
+        if self.run_id:
+            log_filename.append(f"run={self.run_id}")
+
+        log_filename = "_".join(str(x) for x in log_filename)
         log_path = log_dir / f"{log_filename}.log"
         log_dir.mkdir(parents=True, exist_ok=True)
         
 
-        logger.remove(0)
+        logger.remove()
         logger.add(log_path,
             format="[<green>{time:YYYY-MM-DD HH:mm:ss}</green>] | <level>{level}</level> | <cyan>{message}</cyan>",
-            mode="w", level="DEBUG",
+            mode="w", 
+            level="DEBUG",
             retention="4 months"
             )
         logger.success(f"Loguru initialised at: {log_path}")
@@ -92,10 +106,16 @@ class BaseLoguruHelper:
         return log_filename, log_dir
 
 
-    def _build_log_filename(self):
-        if self.data_version:
-            return f"{self.data_name}_{self.data_version}_lr-{self.lr}"
-        return f"{self.data_name}_lr-{self.lr}"
+    def _build_log_filename(self) -> List:
+        parts = [
+            (f"{self.data_name}_{self.data_version}"
+            if self.data_version
+            else self.data_name),
+            f"lr={self.lr}",
+
+        ]
+        
+        return parts
 
 
     def _log_data_aug_method(self, base_log_dir: Path) -> Path:
@@ -112,13 +132,16 @@ class BaseLoguruHelper:
 
     def _build_log_dir(self) -> Path:
         parts = [
+            (self.base_dir if self.base_dir
+             else ""),
             "logs",
+            "loguru_logs",
             self.task_type,
             (f"{self.data_name}_{self.data_version}"
             if self.data_version
             else self.data_name),
             self.model_architecture,
-            (f"{self.training_strategy.capitalize()}Strategy"),
+            (f"{self.training_strategy.title()}_Strategy"),
             (f"{self.ner_head_type.capitalize()}NerHead"),
             (f"{self.trainer_type.capitalize()}Trainer")
         ]
@@ -131,8 +154,8 @@ class BaseLoguruHelper:
 
 
 class ReinitLoguruHelper(BaseLoguruHelper):
-    def __init__(self, cfg:DictConfig):
-        super().__init__(cfg)
+    def __init__(self, cfg:DictConfig, base_dir:str=None, run_id=None):
+        super().__init__(cfg, base_dir, run_id)
         self._reinit_k_layers = cfg.reinit_k_layers
         self._reinit_classifier = getattr(cfg, "reinit_classifier", False)
 
@@ -144,7 +167,6 @@ class ReinitLoguruHelper(BaseLoguruHelper):
         if self._is_configured:
             return
         self._log_filename, self._log_dir = self._generate_log_filename_and_log_dir()
-       
         self._setup_sink(self._log_filename, self._log_dir)
         self._is_configured = True
 
@@ -155,8 +177,8 @@ class ReinitLoguruHelper(BaseLoguruHelper):
         log_dir = self._log_reinit_classifier(log_dir) 
         return log_filename, log_dir    
 
-    def _log_k_layers(self, log_filename:str) -> str:
-        return f"{log_filename}_{self._reinit_k_layers}K"
+    def _log_k_layers(self, filename_parts:List) -> List:
+        return filename_parts + [f"{self._reinit_k_layers}K"]
 
     def _log_reinit_classifier(self, log_dir:Path) -> Path:
         if self._reinit_classifier:
@@ -166,8 +188,8 @@ class ReinitLoguruHelper(BaseLoguruHelper):
 
 
 class LLRDLoguruHelper(BaseLoguruHelper):
-    def __init__(self, cfg:DictConfig):
-        super().__init__(cfg)
+    def __init__(self, cfg:DictConfig, base_dir:str=None, run_id=None):
+        super().__init__(cfg, base_dir, run_id)
         self._llrd_factor = cfg.llrd_factor
 
     def configure(self):
@@ -176,7 +198,7 @@ class LLRDLoguruHelper(BaseLoguruHelper):
         """
         if self._is_configured:
             return
-
+        
         self._log_filename, self._log_dir = self._generate_log_filename_and_log_dir()
         self._setup_sink(self._log_filename, self._log_dir)
         self._is_configured = True
@@ -186,14 +208,14 @@ class LLRDLoguruHelper(BaseLoguruHelper):
         log_filename = self._log_llrd_factor(log_filename)
         return log_filename, log_dir
 
-    def _log_llrd_factor(self, log_filename):
+    def _log_llrd_factor(self, filename_parts:List) -> List:
         "Appends LLRD Factor from configure to log_filename"
-        return f"{log_filename}_llrd-{self._llrd_factor}"
+        return filename_parts + [f"llrd={self._llrd_factor}"]
 
 
 class ReinitLLRDLoguruHelper(ReinitLoguruHelper, LLRDLoguruHelper):
-    def __init__(self, cfg:DictConfig):
-        super().__init__(cfg)
+    def __init__(self, cfg:DictConfig, base_dir:str=None, run_id=None):
+        super().__init__(cfg, base_dir, run_id)
 
     def configure(self) -> None:
         """
@@ -211,10 +233,9 @@ class ReinitLLRDLoguruHelper(ReinitLoguruHelper, LLRDLoguruHelper):
         self._is_configured = True
 
 
-
 class GroupedLLRDLoguruHelper(BaseLoguruHelper):
-    def __init__(self, cfg:DictConfig):
-        super().__init__(cfg)
+    def __init__(self, cfg:DictConfig, base_dir:str=None, run_id=None):
+        super().__init__(cfg, base_dir, run_id)
         pass
 
 
@@ -228,9 +249,9 @@ class LoguruHelperFactory:
         TrainingStrategyName.GROUPED_LLRD: GroupedLLRDLoguruHelper,
     }
     @classmethod
-    def create(cls, cfg:DictConfig):
+    def create(cls, cfg:DictConfig, base_dir=None, run_id=None):
         strategy = TrainingStrategyName(cfg.training_strategy.lower())
-        helper = cls._registry[strategy](cfg)
+        helper = cls._registry[strategy](cfg, base_dir, run_id)
         print(f"Logging helper set to : {helper}")
         return helper
   
@@ -283,6 +304,27 @@ class BaseWandbRunManager:
             raise ValueError("Wandb Run not initialised yet."
                             "Call `.setup_run() first")
         return self._build_run_tags()
+    
+    def build_run_payload(self):
+        return {
+            "name": self._generate_run_name(),
+            "tags": self._build_run_tags(),
+            "config": self.plain_cfg,
+        }
+
+    def attach_to_existing_run(self, run):
+        payload = self.build_run_payload()
+        run.name = payload["name"]
+        print("Payload tags", payload["tags"])
+
+        existing_tags = tuple(run.tags or ())
+        new_tags = tuple(t for t in payload["tags"] if t not in existing_tags)
+        if new_tags:
+            run.tags += new_tags
+
+        run.config.update(payload["config"], allow_val_change=True)
+        self._is_initialised = True
+        return run
 
     def setup_run(self):
         "Initialise a new wandb run with a generated name, tags, and configuration."
@@ -376,10 +418,10 @@ class BaseWandbRunManager:
             self.job_type,
             self.dataset_label,
             self.task_type,
-            (f"{self.training_strategy.capitalize()}Strategy"),
+            (f"{self.training_strategy.title()}_Strategy"),
             self.model_architecture,
             str(self.cfg.lr),
-            (f"{self.ner_head_type.capitalize()}NerHead",
+            (f"{self.ner_head_type.capitalize()}NerHead"),
             (f"{self.trainer_type.capitalize()}Trainer")
         ]
 
@@ -398,8 +440,28 @@ class BaseWandbRunManager:
 class ReinitWandbRunManager(BaseWandbRunManager):
     def __init__(self, cfg, log_dir):
         super().__init__(cfg, log_dir)
-        pass
+        self.reinit_classifier = getattr(cfg, "reinit_classifier", False)
+        self.k_layers = getattr(cfg, "reinit_k_layers", 0)
+    
+    def _build_run_tags(self):
+        base_tags = super()._build_run_tags()
+        additional_tags = [
+            f"reinit_classifier-{self.reinit_classifier}",
+            f"reinit_k_layers-{str(self.k_layers)}",
 
+        ]
+        new_tags = base_tags + additional_tags
+
+        return new_tags
+
+    def _generate_artifact_components(self):
+        artifact_name, artifact_desc, artifact_metadata = super()._generate_artifact_components()
+        artifact_name = f"{artifact_name}_K-Layers_{str(self.k_layers)}"
+        artifact_metadata["K_layers"] = str(self.k_layers)
+        artifact_metadata["Reinit_Classifier"] = self.reinit_classifier
+
+        return artifact_name, artifact_desc, artifact_metadata
+    
 
 
 class LLRDWandbRunManager(BaseWandbRunManager):
@@ -408,12 +470,14 @@ class LLRDWandbRunManager(BaseWandbRunManager):
         self._llrd_factor = getattr(cfg, "llrd_factor", 1.0)
 
     def _build_run_tags(self):
-        return super()._build_run_tags().append(self.llrd_factor)
+        tags = super()._build_run_tags()
+        tags.append(str(self._llrd_factor))
+        return tags
 
     def _generate_artifact_components(self):
         artifact_name, artifact_desc, artifact_metadata = super()._generate_artifact_components()
-        artifact_name = f"{artifact_name}_LLRD_{self._llrd_factor}"
-        artifact_metadata["LLRD_Factor"] = self._llrd_factor
+        artifact_name = f"{artifact_name}_LLRD_{str(self._llrd_factor)}"
+        artifact_metadata["LLRD_Factor"] = str(self._llrd_factor)
 
         return artifact_name, artifact_desc, artifact_metadata
 
