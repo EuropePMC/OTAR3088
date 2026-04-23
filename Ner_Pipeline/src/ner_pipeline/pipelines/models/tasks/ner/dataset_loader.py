@@ -1,5 +1,7 @@
 
 import random
+import os
+import shutil
 from ast import literal_eval
 from collections import Counter
 from typing import (
@@ -76,7 +78,7 @@ def encode_labels(example, label_col, label2id):
     return example
 
 
-def downsample_O_ent(batch, label_col="labels", keep_ratio):
+def downsample_O_ent(batch, label_col="labels", keep_ratio=0.2):
     labels_array = batch[label_col]
 
     is_o_only = np.array([set(l) == {"O"} for l in labels_array])
@@ -256,9 +258,16 @@ class NerDatasetLoader(DatasetLoader):
         return self._SOURCE_LOADERS[self.source_type](self)
 
     def _load_hf_dataset(self):
+        # Clear the cache to avoid corrupted cache issues
+        cache_base = os.path.join(os.path.dirname(os.getcwd()), "hf_cache")
+        dataset_cache_name = self.hf_path.replace('/', '___')
+        cache_path = os.path.join(cache_base, dataset_cache_name)
+        if os.path.exists(cache_path):
+            shutil.rmtree(cache_path, ignore_errors=True)
+        
         ds = load_dataset(self.hf_path, 
                           trust_remote_code=True, 
-                          download_mode="force_redownload")
+                          )
 
         return self._normalise_hf_dataset_dict(ds)
 
@@ -386,7 +395,7 @@ class PrepareNerDataset(PrepareDataset):
         self.dataset = dataset_loader.load()
 
         self.apply_downsample = getattr(cfg.task, "apply_downsample", False)
-        self.downsample_ratio = getattr(cfg.task, "downsample_ratio", 0.5)
+        self.downsample_ratio = getattr(cfg.task, "downsample_ratio", 0.2)
         self.apply_augmentation = getattr(self.cfg.task, "use_data_aug", False)
         
         self.test_size = getattr(cfg.task.data, "test_size", 0.2)
@@ -663,4 +672,3 @@ class PrepareNerDataset(PrepareDataset):
                 "Labels column in dataset": self.label_col,
                 "Unique labels in dataset": list(self.unique_tags),
             })
-
