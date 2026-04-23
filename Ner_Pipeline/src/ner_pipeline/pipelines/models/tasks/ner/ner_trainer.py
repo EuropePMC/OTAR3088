@@ -99,13 +99,6 @@ class NerTrainingOrchestrator(HFTrainingOrchestrator):
         evaluator = NervaluateEvaluator(ner_predictions)
         nervaluate_results = evaluator.run_evaluation()
 
-        # #compute metrics table for logging to wandb if enabled for run
-        # if self.wandb_run:
-        #     #seqeval table
-        #     self.seqeval_logger = SeqevalLogger(ner_predictions, self.wandb_run)
-
-        #     #nervaluate 
-        #     self.nervaluate_logger = NervaluateLogger(nervaluate_results, self.wandb_run)
         if self.wandb_run:
             return ner_predictions, nervaluate_results
         
@@ -113,9 +106,6 @@ class NerTrainingOrchestrator(HFTrainingOrchestrator):
 
 
     def _log_to_wandb(self):
-        # if not hasattr(self, "seqeval_logger") or not hasattr(self, "nervaluate_logger"):
-        #     self._compute_ner_metrics()
-
         #init seqeval_logger and nervaluate_logger
         #fetch prediction results
         ner_predictions, nervaluate_results = self._compute_ner_metrics()
