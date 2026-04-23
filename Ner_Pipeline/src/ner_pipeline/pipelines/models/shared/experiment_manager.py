@@ -6,9 +6,6 @@ from .trainer_config_base import TrainingStrategyName
 from .factory import format_model_checkpoint_name
 
 
-
-
-
 class BaseExperimentSubfolderBuilder:
     def __init__(self, cfg):
         self.cfg = cfg
@@ -52,7 +49,7 @@ class BaseExperimentSubfolderBuilder:
             if self.data_version
             else self.data_name),
             self.model_architecture,
-            (f"{self.training_strategy}Strategy"),
+            (f"{self.training_strategy.title()}Strategy"),
             (f"{self.ner_head_type.upper()}NerHead"),
             (f"{self.trainer_type.capitalize()}Trainer")
         ]
