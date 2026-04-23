@@ -15,8 +15,8 @@ from transformers import (Trainer,
                           AutoConfig,
                           AutoModel,
                           AutoModelForTokenClassification, 
-                          AutoTokenizer)
-
+)
+from transformers.trainer_utils import speed_metrics
 
 from .trainer_config import NerModelConfig
 from ...shared.modelling_base import BuildModel
@@ -117,7 +117,7 @@ class BaseTrainer(Trainer):
             logits = outputs.get("logits")
         else:
             loss = outputs[0]
-            logits = outputs[1:]
+            logits = outputs[1]
 
         return loss, logits
 
@@ -163,19 +163,7 @@ class BaseTrainer(Trainer):
             ignore_keys=ignore_keys,
             metric_key_prefix=metric_key_prefix)
 
-        ##next  lines of codes are only useful when implementing thresholding
-        # logits = output.predictions
-        # labels = output.label_ids
-        # preds = logits.argmax(axis=-1)
-        #preds = self._apply_threshold(preds, logits)
-        # self.eval_predictions = preds
-        # self.eval_label_ids = labels
-        # if self.compute_metrics is not None:
-        #     metrics = self.compute_metrics((preds, labels))
-        # else:
-        #     metrics = output.metrics
         
-        #next lines are for regular evaluation loop 
         self.eval_predictions = output.predictions
         self.eval_label_ids = output.label_ids
 
@@ -296,7 +284,7 @@ class WeightedTrainer(BaseTrainer):
         if isinstance(outputs, dict):
             logits = outputs.get("logits")
         else:
-            logits = outputs[1:]
+            logits = outputs[1]
 
         return logits
 
