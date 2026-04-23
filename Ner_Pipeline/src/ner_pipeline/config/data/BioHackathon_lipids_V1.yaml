@@ -1,6 +1,0 @@
-name: BioHackathon_lipids
-version_name: V1
-source_type: hf
-hf_path: Mardiyyah/BioHackathon_25_IOB_V1
-text_col: tokens
-label_col: tags

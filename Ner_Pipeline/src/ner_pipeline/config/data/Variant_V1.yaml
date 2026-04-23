@@ -1,8 +1,0 @@
-name: Variant
-version_name: V1
-
-
-hf_path: OTAR3088/Variants_IOB-V1
-source_type: hf
-text_col: words
-label_col: labels

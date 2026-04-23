@@ -1,6 +1,0 @@
-name: PDBE
-version_name: V1
-hf_path: OTAR3088/PDBE_IOB_all
-text_col: words
-label_col: labels
-source_type: hf

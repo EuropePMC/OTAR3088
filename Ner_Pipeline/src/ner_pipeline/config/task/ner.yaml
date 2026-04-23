@@ -1,4 +1,5 @@
 
+task_type: ner
 
 #data
 data:
@@ -54,6 +55,8 @@ args:
 apply_downsample: false
 downsample_ratio: 0.2
 
+run_wandb_sweep: false
+
 #pipeline specific modelling params
 #trainer initialiser
 trainer_type: base #different from model_type. Current Options[base, crf, weighted]
@@ -68,3 +71,36 @@ max_ent_per_type: 5000
 aug_prob: 0.5
 
 #use_weighted_trainer: false
+
+
+#WANDB Sweeps config
+sweeps_config: 
+  name: CeLLaTeNerModel
+  method: bayes
+  metric: 
+    name: eval_f1
+    goal: maximize
+  parameters:
+    learning_rate:
+      min: 5e-6
+      max: 1e-3
+      distribution: uniform
+    train_batch_size:
+      values: [16, 32]
+    eval_batch_size:
+      value: 16
+    epochs: 
+      values: [10, 20, 50]
+    weight_decay: 
+      values: [0.1, 0.01, 0.001]
+    warmup_ratio:
+      min: 0.06
+      max: 0.2
+      #values: [0.06, 0.1, 0.02]
+      distribution: uniform
+    lr_scheduler_type:
+      values: ['linear', 'cosine']
+  early_terminate:
+    type: hyperband
+    min_iter: 3
+    eta: 5

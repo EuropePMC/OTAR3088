@@ -1,20 +1,19 @@
 defaults:
   - _self_
-  - logging/hydra_config
   - logging: other_loggers
-  - model: ner
+  - task: ner
   - data: CeLLaTe_no_vague
   
 
 
 task_type: ner
 seed: 3407
-num_epochs: 10
+num_epochs: 20
 batch_size: 16
-warmup_ratio: 0.1
+warmup_ratio: 0.01
 optimizer: "AdamW"
 eval_batch_size: 16
-lr: 2e-5 #options [1e-4, 5e-5]
+lr: 2e-5 #options [3e-5, 5e-5, 5e-6]
 
 use_wandb: false
 training_strategy: base #type of training strategy: Options[base, reinit_only, reinit_llrd,]
@@ -28,9 +27,21 @@ renit_pooler: false
 llrd_factor: 0.9 #options [0.9, 0.95]
 
 #push to hub params
-publish_model: true
+publish_model: false
 repo_id: ""
 commit_message: ""
 push_to_org_repo: true
 
 training_kwargs: ""
+
+
+
+hydra:
+  run:
+    dir: logs/hydra_logs/${hydra:runtime.choices.task}/${task.data.name}_${task.data.version}/${training_strategy}_Strategy/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: ${task.data.name}/${task.data.version}/${training_strategy}
+    subdir: ${hydra.job.num}_${hydra.job.override_dirname}
+  job:
+    chdir: true
+  output_subdir: null

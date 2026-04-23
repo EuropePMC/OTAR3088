@@ -1,8 +1,0 @@
-name: cell-line-v1-dataset
-data_folder: "Datasets/cell-line-v1-dataset"
-
-#for hf
-file_format: "txt"
-train_file: "${.data_folder}/train.${.file_format}"
-test_file: "${.data_folder}/test.${.file_format}"
-val_file: "${.data_folder}/val.${.file_format}" 

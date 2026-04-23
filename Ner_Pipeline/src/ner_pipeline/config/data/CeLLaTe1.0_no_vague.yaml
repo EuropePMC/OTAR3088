@@ -1,6 +1,0 @@
-name: CeLLate1.0_no_vague
-version_name: 1.0
-hf_path: OTAR3088/CeLLaTe_V1.0_no_vague_IOB
-text_col: tokens
-label_col: tags
-source_type: hf
