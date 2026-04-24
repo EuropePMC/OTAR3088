@@ -307,7 +307,7 @@ def sentencize_and_align_entity_spans(document: str, doc_annotations, ent_label_
                   "label": entity[ent_label_key]
             })
         sentence_annotations.append({
-            "sentence": sent.text.strip(),
+            "sentence": sent.text,
             "entities": sent_entities
         })
     return sentence_annotations

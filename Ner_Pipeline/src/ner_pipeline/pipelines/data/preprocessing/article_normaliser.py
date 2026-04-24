@@ -151,13 +151,17 @@ class ArticleNormaliser:
                 sent_recs = sentencize_and_align_entity_spans(
                     document=seg_text,
                     doc_annotations=seg_entities,
-                    label_field="label",
+                    ent_label_key="label",
                 )
 
                 for sent_rec in sent_recs:
                     sent_rec["entities"] = self._validate_entity_alignment(
                         sent_rec, row_id=i
                     )
+                    # Preserve article-level metadata like PMCID for group splitting
+                    for col in row.index:
+                        if col not in [self.params.text_col, self.params.label_col]:
+                            sent_rec[col] = row[col]
                     all_sentence_records.append(sent_rec)
 
         return pd.DataFrame(all_sentence_records)
@@ -219,11 +223,20 @@ class ArticleNormaliser:
                 window_end = cursor + 1
 
             if window_end == original_window_end:
-                # Force progress by moving cursor past current position
-                # but first check if we're at the end
-                if cursor >= text_len - 1:
-                    break
-                window_end = min(cursor + self.max_len, text_len)
+                if window_end < text_len:
+                    # Look backwards for a nice place to cut (semicolon, comma, or space)
+                    cut = text.rfind("; ", cursor, window_end)
+                    if cut == -1:
+                        cut = text.rfind(", ", cursor, window_end)
+                    if cut == -1:
+                        cut = text.rfind(" ", cursor, window_end)
+                    
+                    if cut != -1 and cut > cursor:
+                        window_end = cut + 1 # Include the space/punctuation
+                        
+                if window_end <= cursor:
+                    # Fallback if no spaces exist (e.g. unbroken 500+ char string)
+                    window_end = min(cursor + self.max_len, text_len)
 
             segment_text = text[cursor:window_end]
 

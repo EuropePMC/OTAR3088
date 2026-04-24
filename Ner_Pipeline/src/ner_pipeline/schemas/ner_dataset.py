@@ -53,7 +53,6 @@ class BratConfig(RawNerSchema):
   save_dest: Literal["hf", "local"] = "hf"
   rename_map: Union[Dict[str, str], None] = field(default_factory=lambda: {"Anatomy": "Tissue"})
 
-@inherit_docstring
 @dataclass
 class IOBConfig:
   """
