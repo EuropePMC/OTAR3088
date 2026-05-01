@@ -18,9 +18,24 @@ from transformers import (Trainer,
                           DataCollatorForTokenClassification, 
                           AutoTokenizer)
 
-from .trainer_config_base import TrainingStrategyName
+from .trainer_config_base import TrainingStrategyName, HFModelConfig
+from .factory import count_trainable_params
 from ..strategies.reinit_llrd import ReinitLLRDProcessor
 
+
+class BuildModel(ABC):
+    "Abstract class for initialising HF Based model"
+    def __init__(self, model_config:HFModelConfig):
+        self.checkpoint = model_config.checkpoint
+        self.device = model_config.device
+
+    @abstractmethod
+    def build(self):
+        pass
+
+    def _log_trainable_params(self, model):
+        trainable_params = count_trainable_params(model)
+        logger.info(f"Model initialised with {trainable_params:,} trainable parameters.")
 
 
 
@@ -149,8 +164,4 @@ class TrainingStrategyFactory:
     def create(cls, cfg:DictConfig):
         strategy = TrainingStrategyName(cfg.training_strategy.lower())
         return cls._registry[strategy]()
-
-
-
-
 
