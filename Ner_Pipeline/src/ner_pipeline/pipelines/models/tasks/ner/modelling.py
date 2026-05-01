@@ -15,7 +15,7 @@ from transformers import (Trainer,
                           AutoConfig,
                           AutoModel,
                           AutoModelForTokenClassification, 
-)
+                          )
 from transformers.trainer_utils import speed_metrics
 
 from .trainer_config import NerModelConfig
@@ -25,17 +25,29 @@ from ...strategies.crf import BERTCRFForTokenClassification
 
 
 
+
 class BuildNerModel(BuildModel):
+    """
+    Factory class for constructing NER models with configurable heads.
+    Compatible with HF trainer, supports multiple NER head types
+    (e.g., standard token classification head or CRF-based models) and can return
+    either a fully instantiated model or a callable suitable for use with
+    Hugging Face's `Trainer` during hyperparameter tuning.
+    
+    """
     _MODEL_BUILDER = {
                     "standard": "_build_for_standard",
                     "crf": "_build_for_crf",
                 }
-    def __init__(self, model_config:NerModelConfig):
+    
+    def __init__(self, model_config:NerModelConfig, build_for_hyperparam_tuning=False):
         super().__init__(model_config)
         self.ner_head_type = model_config.ner_head_type
         self.num_labels = model_config.num_labels
         self.label2id = model_config.label2id
         self.id2label = model_config.id2label
+        self.build_for_hyperparam_tuning = build_for_hyperparam_tuning
+
         
 
 
@@ -47,8 +59,12 @@ class BuildNerModel(BuildModel):
         builder = getattr(self, builder_name)
         self._log_model_head_type()
 
+        if self.build_for_hyperparam_tuning:
+            return self._build_for_model_init(builder)
+
         return builder()
 
+    
     def _get_common_kwargs(self):
         return {
                 "num_labels": self.num_labels,
@@ -71,7 +87,7 @@ class BuildNerModel(BuildModel):
         config = AutoConfig.from_pretrained(self.checkpoint,
                                             **self._get_common_kwargs()
                                             )
-
+        
         base_model = AutoModel.from_pretrained(self.checkpoint)
 
         model = BERTCRFForTokenClassification(config)
@@ -88,9 +104,24 @@ class BuildNerModel(BuildModel):
 
         return model
 
+    
+    def _build_for_model_init(self, builder):
+        """
+        Returns a model initialisation function compatible with Hugging Face Trainer.
+        
+        Usage:
+            trainer = Trainer(
+                model_init=model_init_func,
+                ...
+            )
+        """
+        def init(trial=None):
+            return builder()
+        return init
+
+
     def _log_model_head_type(self):
         logger.info(f"Ner token classifier for run: {self.ner_head_type}")
-    
 
 
 class BaseTrainer(Trainer):
@@ -163,7 +194,6 @@ class BaseTrainer(Trainer):
             ignore_keys=ignore_keys,
             metric_key_prefix=metric_key_prefix)
 
-        
         self.eval_predictions = output.predictions
         self.eval_label_ids = output.label_ids
 
