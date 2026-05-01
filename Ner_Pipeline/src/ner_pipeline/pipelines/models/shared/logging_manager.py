@@ -28,13 +28,13 @@ class BaseLoguruHelper:
         self.model_architecture = format_model_checkpoint_name(cfg.task.model_name_or_path)
         self.task_type = cfg.task_type
         self.training_strategy = cfg.training_strategy
-        #self.weighted_trainer = getattr(cfg.task, "use_weighted_trainer", False)
 
         self.ner_head_type = getattr(cfg.task, "ner_head_type", "standard")
         self.trainer_type = getattr(cfg.task, "trainer_type", "base")
 
         self.use_data_aug = getattr(cfg.task, "use_data_aug", False)
         self.data_aug_method = getattr(cfg.task, "data_aug_method", None)
+        self.is_wandb_sweep = getattr(cfg.task, "run_wandb_sweep", False)
 
         self.training_kwargs = getattr(cfg, "training_kwargs", "")
 
@@ -137,6 +137,7 @@ class BaseLoguruHelper:
             "logs",
             "loguru_logs",
             self.task_type,
+            ("wandb_sweep_run" if self.is_wandb_sweep else ""),
             (f"{self.data_name}_{self.data_version}"
             if self.data_version
             else self.data_name),
@@ -198,7 +199,6 @@ class LLRDLoguruHelper(BaseLoguruHelper):
         """
         if self._is_configured:
             return
-        
         self._log_filename, self._log_dir = self._generate_log_filename_and_log_dir()
         self._setup_sink(self._log_filename, self._log_dir)
         self._is_configured = True
@@ -231,6 +231,7 @@ class ReinitLLRDLoguruHelper(ReinitLoguruHelper, LLRDLoguruHelper):
         self._log_dir = self._log_reinit_classifier(self._build_log_dir())
         self._setup_sink(self._log_filename, self._log_dir)
         self._is_configured = True
+
 
 
 class GroupedLLRDLoguruHelper(BaseLoguruHelper):

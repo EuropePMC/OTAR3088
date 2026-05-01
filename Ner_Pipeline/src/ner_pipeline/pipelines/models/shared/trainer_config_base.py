@@ -108,3 +108,9 @@ class TrainingStrategyName(str, Enum):
     LLRD = "llrd_only"
     REINIT_LLRD = "reinit_llrd"
     GROUPED_LLRD = "grouped_llrd" 
+
+
+@dataclass(kw_only=True)
+class HFModelConfig:
+    checkpoint: str
+    device: str
