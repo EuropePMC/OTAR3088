@@ -4,7 +4,7 @@ from typing import Literal, Union, Dict, Any, TypedDict, List
 import spacy
 
 from transformers import PreTrainedTokenizerBase, PreTrainedTokenizerFast
-from ..utils.common import inherit_docstring
+from ner_pipeline.utils.common import inherit_docstring
 
 
 
@@ -35,11 +35,11 @@ class RawNerSchema:
 
     Attributes:
         text_col: Name of Column or field containing sentence or document text
-        entity_col: Name of Column or field containing raw entity annotations dict
+        label_col: Name of Column or field containing raw entity annotations dict
         ent_label_key: Key inside entities column dict that stores the entity class
     """
     text_col: str
-    entity_col: str
+    label_col: str
     ent_label_key: str
 
 
@@ -53,6 +53,8 @@ class BratConfig(RawNerSchema):
   save_dest: Literal["hf", "local"] = "hf"
   rename_map: Union[Dict[str, str], None] = field(default_factory=lambda: {"Anatomy": "Tissue"})
 
+
+@inherit_docstring(RawNerSchema)
 @dataclass
 class IOBConfig:
   """
@@ -72,5 +74,3 @@ class IOBConfig:
         self.schema = RawNerSchema(**self.schema)
       except TypeError as e:
         raise ValueError(f"Invalid RawNerSchema: {e}")
-
-

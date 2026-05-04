@@ -102,23 +102,7 @@ def set_seed(seed: int):
         torch.cuda.manual_seed_all(seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-
-    # try:
-    #     torch.use_deterministic_algorithms(True)
-    # except Exception as e:
-    #     logger.info(f"Warning: deterministic algorithms not fully enforced ({e})")
-
-
-# def parallel_process(df, func):
-#     data = [row for _,row in df.iterrows()]
-    
-
-#     # Initialize multiprocessing pool
-#     with Pool(cpu_count()) as pool:
-#         results = list(tqdm(pool.imap(func, data), total=len(data), desc="Processing rows"))
-
-#     # Convert back to DataFrame
-#     return pd.DataFrame(results)
+        torch.use_deterministic_algorithms(True, warn_only=True)
 
 
 def create_output_dir(base_path:str,  
@@ -175,6 +159,7 @@ def create_output_dir(base_path:str,
     return output_dir
 
 
+
 def setup_loguru(config: Optional[DictConfig]):
     "Setup loguru to a central directory if specified in hydra config or default to current directory(useful for inference only)"
     log_dir = Path(config.loguru.log_dir) if config and "loguru" in config else Path.cwd()
@@ -194,54 +179,7 @@ def setup_loguru(config: Optional[DictConfig]):
     )
     logger.success(f"Loguru initialised at: {log_path}")
 
-
-# def login_to_wandb(key:wandb,
-#                   relogin: Optional[bool] = False,
-#                   verify: Optional[bool] = True):
-   
-#    wandb.login(
-#                key=key,
-#                relogin=relogin,
-#                verify=verify
-#                )
-
-
-def rename_ent(
-    ent_list: Union[List[str], List[Dict]],
-    rename_map: Dict[str, str]
-) -> Union[List[str], List[Dict]]:
-    """
-    Renames multiple entity labels in a list of IOB tags (List[str]) or entity dicts (List[Dict]).
-
-    Args:
-        ent_list: List of entity labels (str) or entity dicts.
-        rename_map: Dictionary mapping old entity names to new ones.
-                    Example: {"CELL": "CellType", "TISSUES": "Tissues"}
-
-    Returns:
-        Updated list with renamed entities.
-    """
-    if all(isinstance(ent, str) for ent in ent_list):  # IOB tag format
-        new_list = []
-        for tag in ent_list:
-            if tag == "O":
-                new_list.append(tag)
-            else:
-                prefix, label = tag.split("-", 1)
-                new_label = rename_map.get(label, label)
-                new_list.append(f"{prefix}-{new_label}")
-        return new_list
-
-    elif all(isinstance(ent, dict) for ent in ent_list):  # Dict format
-        return [
-            {**ent, "label": rename_map.get(ent["label"], ent["label"])}
-            for ent in ent_list
-        ]
-
-    else:
-        raise TypeError("Input must be List[str] or List[Dict] only.")
     
-
 
 def convert_str_2_lst(col):
     """
