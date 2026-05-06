@@ -1,7 +1,5 @@
 
 import random
-import os
-import shutil
 from ast import literal_eval
 from collections import Counter
 from typing import (
@@ -18,6 +16,8 @@ from hydra.utils import to_absolute_path
 
 import pandas as pd
 import numpy as np
+import os
+import shutil
 
 from datasets import (
                       Dataset, DatasetDict, 
@@ -59,6 +59,9 @@ def cast_to_class_labels(dataset:Dataset, label_col:str, text_col:str):
     """    
     features = dataset.features.copy()
     features[text_col] = Sequence(Value("string"))
+    # features[label_col] = Sequence(ClassLabel(names=sorted(unique_tags),
+    #                                           num_classes=len(unique_tags)
+    #                                           ))
     features[label_col] = Sequence(Value("int64"))
     return dataset.cast(features, load_from_cache_file=False)
 
@@ -267,6 +270,9 @@ class NerDatasetLoader(DatasetLoader):
         
         ds = load_dataset(self.hf_path, 
                           trust_remote_code=True, 
+                          #download_mode="force_redownload",
+                          #download_mode="reuse_cache_if_exists",
+                          #cache
                           )
 
         return self._normalise_hf_dataset_dict(ds)
@@ -672,3 +678,5 @@ class PrepareNerDataset(PrepareDataset):
                 "Labels column in dataset": self.label_col,
                 "Unique labels in dataset": list(self.unique_tags),
             })
+
+

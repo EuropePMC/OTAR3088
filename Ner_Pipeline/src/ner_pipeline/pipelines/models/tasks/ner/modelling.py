@@ -26,6 +26,7 @@ from ...strategies.crf import BERTCRFForTokenClassification
 
 
 
+
 class BuildNerModel(BuildModel):
     """
     Factory class for constructing NER models with configurable heads.
@@ -87,7 +88,7 @@ class BuildNerModel(BuildModel):
         config = AutoConfig.from_pretrained(self.checkpoint,
                                             **self._get_common_kwargs()
                                             )
-        
+
         base_model = AutoModel.from_pretrained(self.checkpoint)
 
         model = BERTCRFForTokenClassification(config)
@@ -122,6 +123,7 @@ class BuildNerModel(BuildModel):
 
     def _log_model_head_type(self):
         logger.info(f"Ner token classifier for run: {self.ner_head_type}")
+
 
 
 class BaseTrainer(Trainer):
@@ -194,6 +196,8 @@ class BaseTrainer(Trainer):
             ignore_keys=ignore_keys,
             metric_key_prefix=metric_key_prefix)
 
+        
+        #next lines are for regular evaluation loop 
         self.eval_predictions = output.predictions
         self.eval_label_ids = output.label_ids
 
@@ -314,7 +318,7 @@ class WeightedTrainer(BaseTrainer):
         if isinstance(outputs, dict):
             logits = outputs.get("logits")
         else:
-            logits = outputs[1]
+            logits = outputs[1:]
 
         return logits
 

@@ -187,7 +187,8 @@ class ReinitLLRDProcessor:
               self.training_args,
               self.train_dataset   
           )
-          warmup_steps = compute_warmup_steps(training_steps)
+          warmup_steps = compute_warmup_steps(num_training_steps=training_steps, 
+                                             warmup_ratio=self.cfg.warmup_ratio)
           custom_scheduler = get_linear_schedule_with_warmup(
               optimizer=optimizer, 
               num_warmup_steps=warmup_steps, 

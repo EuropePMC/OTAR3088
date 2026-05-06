@@ -26,7 +26,7 @@ class BaseAugmentationStrategy:
     "Abstract Base class for data augmentation"
 
     @abstractmethod
-    def augment(self,dataset:Dataset) -> Dataset:
+    def augment(self) -> Dataset:
         pass
 
 class GazetteerAugmentationStrategy(BaseAugmentationStrategy):
@@ -58,10 +58,10 @@ class GazetteerAugmentationStrategy(BaseAugmentationStrategy):
         self._rng = random.Random(self.config.seed)
     
     def _decode_labels(self, labels: List[int]) -> List[str]:
-        return [self.config.id2label[i] for i in label]
+        return [self.config.id2label[i] for i in labels]
 
     def _encode_labels(self, labels: List[str]) -> List[int]:
-        return [self.config.label2id[i] for i in label]
+        return [self.config.label2id[i] for i in labels]
 
     def _build_gazetteer(self) -> None:
         """
@@ -69,7 +69,7 @@ class GazetteerAugmentationStrategy(BaseAugmentationStrategy):
         """
         if self._built:
             return
-        for example in dataset:
+        for example in self.dataset:
             tokens = example[self.text_col]
             label_ids = example[self.label_col]
             tags = self._decode_labels(label_ids)
@@ -94,7 +94,7 @@ class GazetteerAugmentationStrategy(BaseAugmentationStrategy):
                     current_type = None
             if current_tokens:
                 self._gazetteer[current_type].append(current_tokens)
-        if self.external_vocab:
+        if self.config.external_vocab:
             self._add_external_vocab()
         
         self._deduplicate_and_cap()
@@ -103,7 +103,7 @@ class GazetteerAugmentationStrategy(BaseAugmentationStrategy):
         
     def _add_external_vocab(self):
         "Add entities from an external vocab or dictionary if defined"
-        for ent_type, values in self.external_vocab.items():
+        for ent_type, values in self.config.external_vocab.items():
             for v in values:
                 tokens = v.split() if isinstance(v, str) else list(v)
                 self._gazetteer[ent_type].append(tokens)
@@ -112,12 +112,12 @@ class GazetteerAugmentationStrategy(BaseAugmentationStrategy):
         for ent_type, entries in self._gazetteer.items():
             unique = list({tuple(e) for e in entries})
             self._rng.shuffle(unique)
-            capped = unique[: self.max_entities_per_type]
+            capped = unique[: self.config.max_entities_per_type]
             self._gazetteer[ent_type] = [list(e) for e in capped]
 
     def _augment_single(self, tokens, label_ids):
         "Augments a single example in dataset"
-        if self._rng.random() > self.augment_prob:
+        if self._rng.random() > self.config.augment_prob:
             return tokens, label_ids
 
         tags = self._decode_labels(label_ids)
@@ -147,7 +147,7 @@ class GazetteerAugmentationStrategy(BaseAugmentationStrategy):
 
         new_tokens = tokens[:start] + replacement + tokens[end + 1 :]
 
-        if len(new_tokens) > self.max_seq_len:
+        if len(new_tokens) > self.config.max_seq_len:
             return tokens, label_ids
 
         new_tags = (
@@ -161,8 +161,8 @@ class GazetteerAugmentationStrategy(BaseAugmentationStrategy):
 
         return new_tokens, new_label_ids
 
-    def augment(self, dataset: Dataset) -> Dataset:
-        self._build_gazetteer(dataset)
+    def augment(self) -> Dataset:
+        self._build_gazetteer()
 
         def _augment_batch(batch):
             new_tokens_batch = []
@@ -178,5 +178,4 @@ class GazetteerAugmentationStrategy(BaseAugmentationStrategy):
                 self.label_col: new_labels_batch,
             }
 
-        return dataset.map(_augment_batch, batched=True)
-        
+        return self.dataset.map(_augment_batch, batched=True)

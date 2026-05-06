@@ -28,6 +28,7 @@ class BaseLoguruHelper:
         self.model_architecture = format_model_checkpoint_name(cfg.task.model_name_or_path)
         self.task_type = cfg.task_type
         self.training_strategy = cfg.training_strategy
+        #self.weighted_trainer = getattr(cfg.task, "use_weighted_trainer", False)
 
         self.ner_head_type = getattr(cfg.task, "ner_head_type", "standard")
         self.trainer_type = getattr(cfg.task, "trainer_type", "base")
@@ -71,6 +72,10 @@ class BaseLoguruHelper:
         if self._is_configured:
             return
         
+        # log_dir = self._log_weighted_trainer(self._build_log_dir())
+        # log_dir = self._log_data_aug_method(log_dir)
+        # self._log_dir = self._log_training_kwargs(log_dir)
+        # self._log_filename = self._build_log_filename()
         self._log_filename, self._log_dir = self._generate_log_filename_and_log_dir()
         
         self._setup_sink(self._log_filename, self._log_dir)
@@ -168,6 +173,9 @@ class ReinitLoguruHelper(BaseLoguruHelper):
         if self._is_configured:
             return
         self._log_filename, self._log_dir = self._generate_log_filename_and_log_dir()
+       
+        #self._log_filename = self._log_k_layers(self._build_log_filename())
+        #self._log_dir = self._log_reinit_classifier(self._build_log_dir())
         self._setup_sink(self._log_filename, self._log_dir)
         self._is_configured = True
 
@@ -199,6 +207,8 @@ class LLRDLoguruHelper(BaseLoguruHelper):
         """
         if self._is_configured:
             return
+        #self._log_filename = self._log_llrd_factor(self._build_log_filename())
+        #self._log_dir = self._log_data_aug_method(self._build_log_dir()) 
         self._log_filename, self._log_dir = self._generate_log_filename_and_log_dir()
         self._setup_sink(self._log_filename, self._log_dir)
         self._is_configured = True
@@ -231,6 +241,8 @@ class ReinitLLRDLoguruHelper(ReinitLoguruHelper, LLRDLoguruHelper):
         self._log_dir = self._log_reinit_classifier(self._build_log_dir())
         self._setup_sink(self._log_filename, self._log_dir)
         self._is_configured = True
+
+
 
 
 
@@ -286,6 +298,7 @@ class BaseWandbRunManager:
         # Extract training and task-specific attributes
         self.task_type = cfg.task_type
         self.training_strategy = cfg.training_strategy.lower()
+        #self.weighted_trainer = getattr(cfg.task, "use_weighted_trainer", False)
         self.training_kwargs = getattr(cfg, "training_kwargs", "")
         
         # Modelling specific attributes

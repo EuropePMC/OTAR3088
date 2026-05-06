@@ -39,6 +39,7 @@ def seqeval_metrics(label_list):
             }
     return compute_metrics
 
+
 def decode_all_predictions(logits, label_ids, id2label):
     preds = np.argmax(logits, axis=2)
 

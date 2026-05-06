@@ -15,8 +15,9 @@ class PrepareDataset(ABC):
 
 
 class DatasetLoader(ABC):
-    def __init__(self, cfg):
+    def __init__(self, cfg, hf_cache_dir=None):
         self.cfg = cfg
+        self.hf_cache_dir = hf_cache_dir
         
     @abstractmethod
     def load(self):

@@ -26,8 +26,8 @@ def align_labels_with_tokens(labels, word_ids):
 def tokenize_and_align(example: Dataset,
                        tokenizer: Union[PreTrainedTokenizerBase, PreTrainedTokenizerFast],
                        block_size: int = 512,
-                       tag_col: str = 'labels',
-                       text_col: str ='words'):
+                       text_col: str = 'tokens',
+                       label_col: str ='tags'):
     
 
     
@@ -39,7 +39,7 @@ def tokenize_and_align(example: Dataset,
     )
     new_labels = []
 
-    for i, labels in enumerate(example[tag_col]):
+    for i, labels in enumerate(example[label_col]):
       word_ids = tokenized_inputs.word_ids(i)
       new_labels.append(align_labels_with_tokens(labels, word_ids))
 

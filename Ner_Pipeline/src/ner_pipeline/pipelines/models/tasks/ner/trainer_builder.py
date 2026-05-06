@@ -5,14 +5,15 @@ from omegaconf import DictConfig, OmegaConf
 import torch.nn as nn
 from transformers.trainer_callback import EarlyStoppingCallback
 
-from .dataset_loader import PrepareNerDatasets
+from .dataset_loader import PrepareNerDataset
 from .metrics import seqeval_metrics
 from .tokenization_utils import tokenize_and_align
 from .modelling import (
-                build_ner_model, init_tokenizer_data_collator,
+                BuildNerModel,
                 CustomCallback
                         )
-from .trainer_config import NerTrainerKwargs
+from .ner_factory import build_tokenizer_data_collator
+from .trainer_config import NerTrainerKwargs, NerModelConfig
 from ...shared.trainer_config_base import BuildContext, HFTrainingComponents
 from ...shared.trainer_builder_base import HFTrainingCompBuilder
 from ...shared.modelling_base import TrainingStrategyFactory
@@ -72,7 +73,7 @@ class NerTrainingCompBuilder(HFTrainingCompBuilder):
     @property
     def dataset_artifact(self):
         if not hasattr(self, "_cached_dataset_artifact"):
-            dataset_prep = PrepareNerDatasets(self.cfg, self.context.wandb_run)
+            dataset_prep = PrepareNerDataset(self.cfg, self.context.wandb_run)
             self._cached_dataset_artifact = dataset_prep.prepare()
         return self._cached_dataset_artifact
 
@@ -92,16 +93,26 @@ class NerTrainingCompBuilder(HFTrainingCompBuilder):
         label2id =  self.dataset_artifact.label2id
         id2label = self.dataset_artifact.id2label
 
-        #prepare model
-        model = build_ner_model(
-                    self.cfg.task.model_name_or_path,
-                    len(unique_tags), label2id,
-                    id2label, device
-                    )
+
+        #build model
+        model_builder_config = NerModelConfig(
+                                        checkpoint=self.cfg.task.model_name_or_path,
+                                        device=device,
+                                        ner_head_type=getattr(self.cfg.task, "ner_head_type", "standard"),
+                                        num_labels=len(unique_tags),
+                                        label2id=label2id,
+                                        id2label=id2label
+                                                        )
+
+        build_for_hyperparam_tuning = getattr(self.cfg.task, "do_hyperparam_with_trainer", False)
+        model_builder = BuildNerModel(model_builder_config, 
+                                      build_for_hyperparam_tuning=build_for_hyperparam_tuning)
+        model = model_builder.build()
+        
         max_pos_emb = model.config.max_position_embeddings
 
         #init tokenizer, data_collator
-        tokenizer, data_collator = init_tokenizer_data_collator(self.cfg.task.model_name_or_path)
+        tokenizer, data_collator = build_tokenizer_data_collator(self.cfg.task.model_name_or_path)
         tokenize_fn = lambda batch: tokenize_and_align(batch, tokenizer=tokenizer, block_size=max_pos_emb)
         tokenized_train = train_dataset.map(tokenize_fn, 
                                             batched=True,
