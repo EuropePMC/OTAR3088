@@ -9,60 +9,112 @@ HG-adapted cells	VagueCellCategory
 HIV-1 infected patient cells	VagueCellCategory
 HIV-1 reservoir cells	VagueCellCategory
 NG cells	VagueCellCategory
+adjacent background tissues	VagueTissue
+adjacent non-malignant tissue	VagueTissue
+adjacent non-tumour tissue	VagueTissue
+adjacent normal tissues	VagueTissue
+adult cell types	VagueCellCategory
 apoptotic cell populations	VagueCellCategory
 apoptotic cells	VagueCellCategory
 apoptotic\/necrotic cells	VagueCellCategory
+background tissue	VagueTissue
+background tissue sections	VagueTissue
 barrier tissues	VagueTissue
 bronchial biopsies	VagueTissue
 cancer cells	VagueCellCategory
 cancerous cells	VagueCellCategory
+cell classes	VagueCellCategory
 cell population	VagueCellCategory
+cell subtypes	VagueCellCategory
+cell type	VagueCellCategory
 cell types	VagueCellCategory
 cells	VagueCellCategory
+cells from diseased samples	VagueCellCategory
 cells from nondiseased samples	VagueCellCategory
 cells from patients who died late in the course of COVID-19 and developed post-COVID-19 lung fibrosis	VagueCellCategory
 cells from patients with IPF	VagueCellCategory
 cells from patients with lung carcinoma	VagueCellCategory
+cells in each tissue	VagueCellCategory
+cells lining these vessels	VagueCellCategory
+cells of the same type	VagueCellCategory
+coarse cell-type	VagueCellCategory
 control and untreated cells	VagueCellCategory
 control cells	VagueCellCategory
 dead cells	VagueCellCategory
 dead\/necrotic cells	VagueCellCategory
+disease cells	VagueCellCategory
 diseased tissue	VagueTissue
 dissociated cells	VagueCellCategory
+downstream terminal ends	VagueTissue
 embedded tissue blocks	VagueTissue
+fetal	VagueCellCategory
+fetal	VagueTissue
 fresh native tissue	VagueTissue
 healthy	VagueTissue
 healthy tissue	VagueTissue
+high-quality cells	VagueCellCategory
+higher-quality cells	VagueCellCategory
 host cells	VagueCellCategory
+human cell types	VagueCellCategory
+human tissues	VagueTissue
+immune cell subsets	VagueCellCategory
 infected cells	VagueCellCategory
 integrated HIV DNA-harboring cells	VagueCellCategory
 latent cells	VagueCellCategory
 latently infected cells	VagueCellCategory
 live cells	VagueCellCategory
 lung cell type	VagueCellCategory
+major cell types	VagueCellCategory
+major immune lineage	VagueCellCategory
+major immune lineage	VagueTissue
+major immune lineages	VagueCellCategory
+major immune lineages	VagueTissue
+matched normal non-tumorigenic tissue	VagueTissue
 metastatic lesions	VagueTissue
 mislabeled cells	VagueCellCategory
 naive	VagueCellCategory
 nasal brushings	VagueTissue
+native tissue	VagueTissue
 necrotic cells	VagueCellCategory
 non-lymphoid tissues	VagueTissue
 non-neuronal cells	VagueCellCategory
+nontransplanted donor organs	VagueTissue
 normal cells	VagueCellCategory
+off-target cells	VagueCellCategory
+organ models	VagueTissue
+organoid models	VagueTissue
+organoid reference	VagueTissue
+organoid types	VagueTissue
+organoids	VagueTissue
 organs	VagueTissue
 original cells	VagueCellCategory
 originally undetected rare cells	VagueCellCategory
 other cell types	VagueCellCategory
+other organs	VagueTissue
 patient cells	VagueCellCategory
+patient-derived cells	VagueCellCategory
 peritumor tissues	VagueTissue
 previously known cell types	VagueCellCategory
+primary tissue reference	VagueTissue
 rare	VagueCellCategory
 rare cell types	VagueCellCategory
+rare cells	VagueCellCategory
 reactivated cells	VagueCellCategory
+reference cells	VagueCellCategory
 remaining cell types	VagueCellCategory
 similar anatomical locations	VagueTissue
 spatial regions	VagueTissue
+specific tissues	VagueTissue
+stem cell source	VagueCellCategory
+stem cell source	VagueTissue
+strongly stained cells	VagueCellCategory
 subgroups of cells	VagueCellCategory
 target cells	VagueCellCategory
+target tissue	VagueTissue
+tissue environment	VagueTissue
+tissue environments	VagueTissue
+tissue groups	VagueTissue
+tissue type	VagueTissue
 transfected cells	VagueCellCategory
 treated cells	VagueCellCategory
 tumor	VagueTissue
@@ -70,5 +122,13 @@ tumor cells	VagueCellCategory
 tumor tissue	VagueTissue
 tumor tissues	VagueTissue
 tumor-associated	VagueCellCategory
+tumour areas	VagueTissue
+tumour region	VagueTissue
+undifferentiated identities	VagueCellCategory
+undifferentiated identities	VagueTissue
 unknown	VagueCellCategory
+unknown	VagueTissue
 unlabeled	VagueCellCategory
+unlabeled	VagueTissue
+unlabelled	VagueCellCategory
+unlabelled	VagueTissue
