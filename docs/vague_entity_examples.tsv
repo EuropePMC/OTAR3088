@@ -1,134 +1,326 @@
 #text	label
-CYTOR-depleted cells	VagueCellCategory
-Cells	VagueCellCategory
-Control cells	VagueCellCategory
-DMSO-treated cells	VagueCellCategory
-Excess cells	VagueCellCategory
+(universal) lineage	VagueCellTypeCategory
+B/H	VagueCellTypeCategory
+B/H broad cell types	VagueCellTypeCategory
+CYTOR-depleted cells	VagueCellTypeCategory
+Cells	VagueCellTypeCategory
+Control cells	VagueCellTypeCategory
+DMSO-treated cells	VagueCellTypeCategory
+DsRed, GFP double positive cells	VagueCellTypeCategory
+Excess cells	VagueCellTypeCategory
 Extracted biopsies	VagueTissue
-HG-adapted cells	VagueCellCategory
-HIV-1 infected patient cells	VagueCellCategory
-HIV-1 reservoir cells	VagueCellCategory
-NG cells	VagueCellCategory
+F1-like disease population	VagueCellTypeCategory
+F1: superficial	VagueCellTypeCategory
+F2/F3: Perivascular	VagueCellTypeCategory
+F2: universal	VagueCellTypeCategory
+HG-adapted cells	VagueCellTypeCategory
+HIV-1 infected patient cells	VagueCellTypeCategory
+HIV-1 reservoir cells	VagueCellTypeCategory
+NG cells	VagueCellTypeCategory
+STx sections	VagueTissue
 adjacent background tissues	VagueTissue
 adjacent non-malignant tissue	VagueTissue
 adjacent non-tumour tissue	VagueTissue
 adjacent normal tissues	VagueTissue
-adult cell types	VagueCellCategory
-apoptotic cell populations	VagueCellCategory
-apoptotic cells	VagueCellCategory
-apoptotic\/necrotic cells	VagueCellCategory
+adjacent sections	VagueTissue
+adult and developing human organ	VagueTissue
+adult and developing human organs	VagueTissue
+adult cell type	VagueCellTypeCategory
+adult cell types	VagueCellTypeCategory
+adult primary tissues	VagueTissue
+adult tissues	VagueTissue
+apoptotic cell populations	VagueCellTypeCategory
+apoptotic cells	VagueCellTypeCategory
+apoptotic/necrotic cells	VagueCellTypeCategory
+apoptotic\/necrotic cells	VagueCellTypeCategory
+background samples	VagueTissue
+background section	VagueTissue
+background sections	VagueTissue
 background tissue	VagueTissue
 background tissue sections	VagueTissue
+barrier sites	VagueTissue
 barrier tissues	VagueTissue
+branch 2	VagueTissue
+branching point	VagueTissue
+broad cell types	VagueCellTypeCategory
 bronchial biopsies	VagueTissue
-cancer cells	VagueCellCategory
-cancerous cells	VagueCellCategory
-cell classes	VagueCellCategory
-cell population	VagueCellCategory
-cell subtypes	VagueCellCategory
-cell type	VagueCellCategory
-cell types	VagueCellCategory
-cells	VagueCellCategory
-cells from diseased samples	VagueCellCategory
-cells from nondiseased samples	VagueCellCategory
-cells from patients who died late in the course of COVID-19 and developed post-COVID-19 lung fibrosis	VagueCellCategory
-cells from patients with IPF	VagueCellCategory
-cells from patients with lung carcinoma	VagueCellCategory
-cells in each tissue	VagueCellCategory
-cells lining these vessels	VagueCellCategory
-cells of the same type	VagueCellCategory
-coarse cell-type	VagueCellCategory
-control and untreated cells	VagueCellCategory
-control cells	VagueCellCategory
-dead cells	VagueCellCategory
-dead\/necrotic cells	VagueCellCategory
-disease cells	VagueCellCategory
+cancer cells	VagueCellTypeCategory
+cancerous cells	VagueCellTypeCategory
+cell	VagueCellTypeCategory
+cell classes	VagueCellTypeCategory
+cell clusters	VagueCellTypeCategory
+cell line	VagueCellTypeCategory
+cell lines	VagueCellTypeCategory
+cell population	VagueCellTypeCategory
+cell subset	VagueCellTypeCategory
+cell subtypes	VagueCellTypeCategory
+cell type	VagueCellTypeCategory
+cell types	VagueCellTypeCategory
+cell-type	VagueCellTypeCategory
+cell-types	VagueCellTypeCategory
+cellline	VagueCellTypeCategory
+cells	VagueCellTypeCategory
+cells from diseased samples	VagueCellTypeCategory
+cells from nondiseased samples	VagueCellTypeCategory
+cells from patients who died late in the course of COVID-19 and developed post-COVID-19 lung fibrosis	VagueCellTypeCategory
+cells from patients with IPF	VagueCellTypeCategory
+cells from patients with lung carcinoma	VagueCellTypeCategory
+cells in each tissue	VagueCellTypeCategory
+cells lining these vessels	VagueCellTypeCategory
+cells of the same type	VagueCellTypeCategory
+celltype	VagueCellTypeCategory
+celltypes	VagueCellTypeCategory
+cellular niche	VagueCellTypeCategory
+chronically rejecting grafts	VagueTissue
+circular vessel	VagueTissue
+coarse cell-type	VagueCellTypeCategory
+collapsed vessels	VagueTissue
+complex tissues	VagueTissue
+control and untreated cells	VagueCellTypeCategory
+control cells	VagueCellTypeCategory
+control tissues	VagueTissue
+cycling clusters	VagueTissue
+daughter vessels	VagueTissue
+dead cells	VagueCellTypeCategory
+dead\/necrotic cells	VagueCellTypeCategory
+degenerated fibers	VagueTissue
+digested tissues	VagueTissue
+disease cells	VagueCellTypeCategory
 diseased tissue	VagueTissue
-dissociated cells	VagueCellCategory
+dissociated cells	VagueCellTypeCategory
+distinct samples	VagueCellTypeCategory
+distinct samples	VagueTissue
+distinct vessel	VagueTissue
+distinct vessels	VagueTissue
+diverse cell types	VagueCellTypeCategory
+donated organs	VagueTissue
 downstream terminal ends	VagueTissue
 embedded tissue blocks	VagueTissue
-fetal	VagueCellCategory
+entire organs	VagueTissue
+fetal	VagueCellTypeCategory
 fetal	VagueTissue
+fine-grained subsets	VagueTissue
+first generation	VagueCellTypeCategory
+fresh frozen tumour	VagueTissue
 fresh native tissue	VagueTissue
+generation airways	VagueTissue
 healthy	VagueTissue
+healthy cell lines	VagueCellTypeCategory
+healthy organ	VagueTissue
+healthy patients	VagueTissue
+healthy samples	VagueTissue
 healthy tissue	VagueTissue
-high-quality cells	VagueCellCategory
-higher-quality cells	VagueCellCategory
-host cells	VagueCellCategory
-human cell types	VagueCellCategory
+healthy tissues	VagueTissue
+high-quality cells	VagueCellTypeCategory
+higher-quality cells	VagueCellTypeCategory
+histological tissue sections	VagueTissue
+host cells	VagueCellTypeCategory
+human	VagueCellTypeCategory
+human	VagueTissue
+human cell types	VagueCellTypeCategory
+human endoderm-derived organs from adult	VagueTissue
+human fetal tissues	VagueTissue
+human material	VagueTissue
+human organ	VagueTissue
+human organs	VagueTissue
+human samples	VagueTissue
+human tissue	VagueTissue
 human tissues	VagueTissue
-immune cell subsets	VagueCellCategory
-infected cells	VagueCellCategory
-integrated HIV DNA-harboring cells	VagueCellCategory
-latent cells	VagueCellCategory
-latently infected cells	VagueCellCategory
-live cells	VagueCellCategory
-lung cell type	VagueCellCategory
-major cell types	VagueCellCategory
-major immune lineage	VagueCellCategory
+immune cell subsets	VagueCellTypeCategory
+individual cells	VagueCellTypeCategory
+individual vessels	VagueTissue
+infected cells	VagueCellTypeCategory
+inferior territories	VagueTissue
+intact human organ	VagueTissue
+integrated HIV DNA-harboring cells	VagueCellTypeCategory
+large vessels	VagueTissue
+larger vessels	VagueTissue
+latent cells	VagueCellTypeCategory
+latently infected cells	VagueCellTypeCategory
+lineage/subset	VagueCellTypeCategory
+live cells	VagueCellTypeCategory
+low-quality cells	VagueCellTypeCategory
+lung cell type	VagueCellTypeCategory
+main tree	VagueTissue
+major cell types	VagueCellTypeCategory
+major immune lineage	VagueCellTypeCategory
 major immune lineage	VagueTissue
-major immune lineages	VagueCellCategory
+major immune lineages	VagueCellTypeCategory
 major immune lineages	VagueTissue
+major lineage	VagueCellTypeCategory
 matched normal non-tumorigenic tissue	VagueTissue
+matching cell type	VagueCellTypeCategory
 metastatic lesions	VagueTissue
-mislabeled cells	VagueCellCategory
-naive	VagueCellCategory
+mid zones	VagueTissue
+minced tissues	VagueTissue
+mislabeled cells	VagueCellTypeCategory
+multiple LN	VagueCellTypeCategory
+multiple sections	VagueTissue
+mutation-corrected cell lines	VagueCellTypeCategory
+naive	VagueCellTypeCategory
+nasal brushes	VagueTissue
 nasal brushings	VagueTissue
 native tissue	VagueTissue
-necrotic cells	VagueCellCategory
+necrotic cells	VagueCellTypeCategory
+negative cells	VagueCellTypeCategory
+negative-expressing cells	VagueCellTypeCategory
+network	VagueTissue
+network endpoint	VagueTissue
+network endpoints	VagueTissue
+networks	VagueTissue
 non-lymphoid tissues	VagueTissue
-non-neuronal cells	VagueCellCategory
+non-malignant counterparts	VagueTissue
+non-mutant normal cells	VagueCellTypeCategory
+non-neural types	VagueCellTypeCategory
+non-neuronal cells	VagueCellTypeCategory
+non-skin tissues	VagueTissue
+non-tumour tissue	VagueTissue
 nontransplanted donor organs	VagueTissue
-normal cells	VagueCellCategory
-off-target cells	VagueCellCategory
+normal cell	VagueCellTypeCategory
+normal cells	VagueCellTypeCategory
+normal state cells	VagueCellTypeCategory
+normal tissue	VagueTissue
+normal tissues	VagueTissue
+off-target cells	VagueCellTypeCategory
+organ	VagueTissue
 organ models	VagueTissue
 organoid models	VagueTissue
 organoid reference	VagueTissue
 organoid types	VagueTissue
 organoids	VagueTissue
 organs	VagueTissue
-original cells	VagueCellCategory
-originally undetected rare cells	VagueCellCategory
-other cell types	VagueCellCategory
+original cells	VagueCellTypeCategory
+original model cell	VagueCellTypeCategory
+original model cells	VagueCellTypeCategory
+originally undetected rare cells	VagueCellTypeCategory
+other cell types	VagueCellTypeCategory
 other organs	VagueTissue
-patient cells	VagueCellCategory
-patient-derived cells	VagueCellCategory
+pathologic tissues	VagueTissue
+patient cell lines	VagueCellTypeCategory
+patient cells	VagueCellTypeCategory
+patient-derived cells	VagueCellTypeCategory
 peritumor tissues	VagueTissue
-previously known cell types	VagueCellCategory
+population	VagueCellTypeCategory
+populations	VagueCellTypeCategory
+previously known cell types	VagueCellTypeCategory
+primary adult	VagueCellTypeCategory
+primary adult	VagueCellLine
+primary cell	VagueCellTypeCategory
+primary cell	VagueCellLine
+primary cell line	VagueCellTypeCategory
+primary cell line	VagueCellLine
+primary cell lines	VagueCellTypeCategory
+primary cell lines	VagueCellLine
+primary cell type	VagueCellTypeCategory
+primary cell type	VagueCellLine
+primary cell types	VagueCellTypeCategory
+primary cell types	VagueCellLine
+primary cells	VagueCellTypeCategory
+primary cells	VagueCellLine
+primary counterparts	VagueCellTypeCategory
+primary reference cell types	VagueCellTypeCategory
+primary reference cell types	VagueCellLine
+primary tissue	VagueCellLine
+primary tissue cells	VagueCellTypeCategory
+primary tissue cells	VagueCellLine
 primary tissue reference	VagueTissue
-rare	VagueCellCategory
-rare cell types	VagueCellCategory
-rare cells	VagueCellCategory
-reactivated cells	VagueCellCategory
-reference cells	VagueCellCategory
-remaining cell types	VagueCellCategory
+primary tissues	VagueCellLine
+proliferating areas at crypt bases	VagueTissue
+rare	VagueCellTypeCategory
+rare cell	VagueCellTypeCategory
+rare cell types	VagueCellTypeCategory
+rare cells	VagueCellTypeCategory
+reactivated cells	VagueCellTypeCategory
+real vessels	VagueTissue
+receiver cells	VagueCellTypeCategory
+reference cell	VagueCellTypeCategory
+reference cells	VagueCellTypeCategory
+remaining cell types	VagueCellTypeCategory
+resting cells	VagueCellTypeCategory
+sample	VagueTissue
+samples	VagueTissue
+scarring risk stroma	VagueTissue
+segment	VagueTissue
+segment branch	VagueTissue
+segmented vessels	VagueTissue
+segments	VagueTissue
+sender cells	VagueCellTypeCategory
 similar anatomical locations	VagueTissue
+similar cells	VagueCellTypeCategory
+single cell	VagueCellTypeCategory
+single cells	VagueCellTypeCategory
+small vessels	VagueTissue
+smaller vessels	VagueTissue
+soft tissue	VagueTissue
+solid organ	VagueTissue
 spatial regions	VagueTissue
+specialized cells	VagueCellTypeCategory
 specific tissues	VagueTissue
-stem cell source	VagueCellCategory
+stem cell source	VagueCellTypeCategory
 stem cell source	VagueTissue
-strongly stained cells	VagueCellCategory
-subgroups of cells	VagueCellCategory
-target cells	VagueCellCategory
+strongly stained cells	VagueCellTypeCategory
+subgroups of cells	VagueCellTypeCategory
+sublocation of the respiratory system	VagueTissue
+subpopulation enriched for CCL2 and CXCL2	VagueCellTypeCategory
+subregions within the network	VagueTissue
+superficial (papillary)	VagueTissue
+synthetic vessel	VagueTissue
+target cells	VagueCellTypeCategory
 target tissue	VagueTissue
+terminal branches	VagueTissue
+terminal end	VagueTissue
+terminal end in a truncated network	VagueTissue
+terminal ends of our network	VagueTissue
+terminal vessel ends	VagueTissue
+tissue	VagueTissue
+tissue cells	VagueCellTypeCategory
+tissue clusters	VagueTissue
 tissue environment	VagueTissue
 tissue environments	VagueTissue
+tissue group	VagueTissue
 tissue groups	VagueTissue
+tissue sample	VagueTissue
+tissue samples	VagueTissue
+tissue section	VagueTissue
+tissue sections	VagueTissue
+tissue site	VagueTissue
+tissue sites	VagueTissue
+tissue subset	VagueTissue
 tissue type	VagueTissue
-transfected cells	VagueCellCategory
-treated cells	VagueCellCategory
+tissue types	VagueTissue
+tissues	VagueTissue
+transfected cells	VagueCellTypeCategory
+treated cells	VagueCellTypeCategory
+truncated network	VagueTissue
 tumor	VagueTissue
-tumor cells	VagueCellCategory
+tumor cells	VagueCellTypeCategory
 tumor tissue	VagueTissue
 tumor tissues	VagueTissue
-tumor-associated	VagueCellCategory
+tumor-associated	VagueCellTypeCategory
 tumour areas	VagueTissue
 tumour region	VagueTissue
-undifferentiated identities	VagueCellCategory
+undifferentiated identities	VagueCellTypeCategory
 undifferentiated identities	VagueTissue
-unknown	VagueCellCategory
+unique cells	VagueCellTypeCategory
+universal (reticular)	VagueTissue
+unknown	VagueCellTypeCategory
 unknown	VagueTissue
-unlabeled	VagueCellCategory
+unlabeled	VagueCellTypeCategory
 unlabeled	VagueTissue
-unlabelled	VagueCellCategory
+unlabelled	VagueCellTypeCategory
 unlabelled	VagueTissue
+vessel centreline	VagueTissue
+vessel network	VagueTissue
+vessel networks	VagueTissue
+vessel portions	VagueTissue
+vessel segment	VagueTissue
+vessel surface	VagueTissue
+vessel wall	VagueTissue
+vessels	VagueTissue
+viable cells	VagueCellTypeCategory
+vitro-stimulated cells	VagueCellLine
+whole intact organ	VagueTissue
+whole organ	VagueTissue
+whole organ network	VagueTissue
+whole organs	VagueTissue
+whole segment	VagueTissue
