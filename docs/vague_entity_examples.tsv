@@ -49,8 +49,8 @@ cancerous cells	VagueCellTypeCategory
 cell	VagueCellTypeCategory
 cell classes	VagueCellTypeCategory
 cell clusters	VagueCellTypeCategory
-cell line	VagueCellTypeCategory
-cell lines	VagueCellTypeCategory
+cell line	VagueCellLine
+cell lines	VagueCellLine
 cell population	VagueCellTypeCategory
 cell subset	VagueCellTypeCategory
 cell subtypes	VagueCellTypeCategory
@@ -105,7 +105,7 @@ fresh frozen tumour	VagueTissue
 fresh native tissue	VagueTissue
 generation airways	VagueTissue
 healthy	VagueTissue
-healthy cell lines	VagueCellTypeCategory
+healthy cell lines	VagueCellLine
 healthy organ	VagueTissue
 healthy patients	VagueTissue
 healthy samples	VagueTissue
@@ -203,26 +203,24 @@ peritumor tissues	VagueTissue
 population	VagueCellTypeCategory
 populations	VagueCellTypeCategory
 previously known cell types	VagueCellTypeCategory
-primary adult	VagueCellTypeCategory
 primary adult	VagueCellLine
-primary cell	VagueCellTypeCategory
+primary adult	VagueCellTypeCategory
 primary cell	VagueCellLine
-primary cell line	VagueCellTypeCategory
+primary cell	VagueCellTypeCategory
 primary cell line	VagueCellLine
-primary cell lines	VagueCellTypeCategory
 primary cell lines	VagueCellLine
-primary cell type	VagueCellTypeCategory
 primary cell type	VagueCellLine
-primary cell types	VagueCellTypeCategory
+primary cell type	VagueCellTypeCategory
 primary cell types	VagueCellLine
-primary cells	VagueCellTypeCategory
+primary cell types	VagueCellTypeCategory
 primary cells	VagueCellLine
+primary cells	VagueCellTypeCategory
 primary counterparts	VagueCellTypeCategory
-primary reference cell types	VagueCellTypeCategory
 primary reference cell types	VagueCellLine
+primary reference cell types	VagueCellTypeCategory
 primary tissue	VagueCellLine
-primary tissue cells	VagueCellTypeCategory
 primary tissue cells	VagueCellLine
+primary tissue cells	VagueCellTypeCategory
 primary tissue reference	VagueTissue
 primary tissues	VagueCellLine
 proliferating areas at crypt bases	VagueTissue
