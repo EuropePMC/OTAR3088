@@ -432,5 +432,6 @@ def find_star_alleles(text: str, gene_spans: list[tuple]) -> list[tuple]:
             full_span = text[g_start:match.end()]
             results.append((full_span, g_start, match.end(), "StarAllele"))
         else:
-            results.append((word, g_start, g_end, label)) # keep geneprotein capture
+            continue # Removing GP annotations for now
+            # results.append((word, g_start, g_end, label)) # keep geneprotein capture
     return results
