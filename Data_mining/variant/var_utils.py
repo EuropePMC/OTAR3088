@@ -435,3 +435,12 @@ def find_star_alleles(text: str, gene_spans: list[tuple]) -> list[tuple]:
             continue # Removing GP annotations for now
             # results.append((word, g_start, g_end, label)) # keep geneprotein capture
     return results
+
+# RefSNP / dbSNP pattern (e.g. rs4845618)
+REFSNP_RE = re.compile(r'\brs[0-9]+\b')
+
+# Full pharmacogenetic Star Allele pattern (e.g. CYP2D6*68 + *4, CYP2C19*1/*1)
+STAR_ALLELE_RE = re.compile(
+    r'\b[A-Za-z0-9]+[ \t]*\*[ \t]*[0-9]+[A-Za-z]?(?::[0-9]+[A-Za-z]?)*'
+    r'(?:\s*(?:\+|\/)\s*(?:\*)?[0-9]+[A-Za-z]?(?::[0-9]+[A-Za-z]?)*)*'
+)
