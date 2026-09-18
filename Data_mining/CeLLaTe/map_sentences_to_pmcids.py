@@ -117,8 +117,7 @@ def main():
     
     # Define inputs and outputs
     inputs = {
-        'cellate_final.tsv': 'cellate_final_with_pmcid.tsv',
-        'cellate_final_with_vague.tsv': 'cellate_final_with_vague_with_pmcid.tsv'
+        'cellate_final_no_vague.tsv': 'cellate_final_no_vague_with_pmcid.tsv'
     }
     
     for in_name, out_name in inputs.items():
