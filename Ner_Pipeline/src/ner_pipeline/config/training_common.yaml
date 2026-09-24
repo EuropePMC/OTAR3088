@@ -2,25 +2,29 @@ defaults:
   - _self_
   - logging: other_loggers
   - task: ner
-  - data: CeLLaTe_no_vague
+
   
 
-
-task_type: ner
+task_type: ${task.task_type}
 seed: 3407
 num_epochs: 20
 batch_size: 16
 warmup_ratio: 0.01
 optimizer: "AdamW"
 eval_batch_size: 16
-lr: 2e-5 #options [3e-5, 5e-5, 5e-6]
+lr: 2e-5 #options [1e-4, 5e-5]
+early_stopping_patience: 3
 
+#weight and bias 
 use_wandb: false
+save_model_artifact: false #whether to save model artifacts to wandb
+
 training_strategy: base #type of training strategy: Options[base, reinit_only, reinit_llrd,]
 
 
 #reinit strategy parameters
 weight_decay: 0.01
+
 reinit_k_layers: 4
 reinit_classifier: false
 renit_pooler: false
@@ -29,7 +33,7 @@ llrd_factor: 0.9 #options [0.9, 0.95]
 #push to hub params
 publish_model: false
 repo_id: ""
-commit_message: ""
+commit_message: "push model to hub"
 push_to_org_repo: true
 
 training_kwargs: ""

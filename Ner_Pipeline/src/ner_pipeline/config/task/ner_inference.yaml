@@ -1,0 +1,34 @@
+
+task_type: ner_inference
+
+
+#data
+data:
+  name: CeLLaTe-2Class-Inference-Dataset
+  version: 3.0
+  hf_path: OTAR3088/CeLLaTe-ner-2class-iob_final
+  text_col: tokens #name of column containing tokens list
+  label_col: tags #name of column containing label list
+  source_type: hf
+
+
+#Below arguments are currently disabled
+#wandb_artifact_dir: null
+# load_model_from_wandb: false #whether to load model from wandb
+# load_model_from_hf: true #whether to load model from hf
+
+
+
+args: 
+  do_train: false
+  do_predict: true
+  group_by_length: true
+  per_device_eval_batch_size: ${batch_size}
+  dataloader_num_workers: 0
+  dataloader_drop_last: false
+  data_seed: ${seed}
+  seed: ${seed}
+  full_determinism: true
+
+label_all_tokens: true
+

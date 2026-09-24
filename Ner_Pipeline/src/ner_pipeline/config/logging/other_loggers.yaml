@@ -1,11 +1,12 @@
 # config/logging/other-loggers.yaml
 wandb:
   run:
-    project: otar-3088    
-    entity:  ebi_literature     
+    project: otar-3088    #testing-otar
+    entity:  ebi_literature    #"Mardiyyah"     
     job_type: training                
 
     
   registry:
     registry_name: CeLLaTe-Entities
     collection_name: CeLLaTe-Models
+

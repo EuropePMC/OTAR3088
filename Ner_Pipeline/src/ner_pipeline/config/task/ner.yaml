@@ -3,20 +3,26 @@ task_type: ner
 
 #data
 data:
-  name: CeLLaTe_no_vague
-  version: 1.0
-  hf_path: OTAR3088/CeLLaTe_V1.0_no_vague_IOB
+  name: CeLLaTe_3class
+  version: 3.0
+  hf_path: OTAR3088/CeLLaTe-ner-3class-iob_final
   text_col: tokens
   label_col: tags
   source_type: hf
 
 #data attributes
 ner_tag_list: [B-CellLine, I-CellLine, B-CellType, I-CellType, B-Tissue, I-Tissue, O]
-label_names: [CellLine, CellType, Tissue]
+label_names: [CellLine, CellType, Tissue] 
 
 # Model & Tokenizer
 model_name_or_path: Mardiyyah/cellate2.0-tapt_base-LR_5e-05
 
+push_to_hub_kwargs: 
+  finetuned_from: ${..model_name_or_path}
+  tasks: token-classification  
+  dataset: ${..data.hf_path} 
+  language: en
+  license: apache-2.0
 
 # Training hyperparameters
 args:
@@ -34,24 +40,25 @@ args:
   overwrite_output_dir: true
 
   # Logging and evaluation
-  logging_steps: 100
-  logging_strategy: steps
-  eval_strategy: steps
-  save_strategy: steps
+  logging_steps: 10
+  logging_strategy: epoch
+  eval_strategy: epoch
+  save_strategy: epoch
   save_total_limit: null 
   load_best_model_at_end: true
-  metric_for_best_model: eval_f1
+  metric_for_best_model: eval_macro_f1
   greater_is_better: true
   group_by_length: true
   do_train: true
   label_smoothing_factor: 0.0
-  #gradient_accumulation_steps: 2
+  gradient_accumulation_steps: 2
 
   # Optional params 
   fp16: true #mixed precision for faster training on GPU 
   seed: ${seed}
   data_seed: ${seed}
 
+label_all_tokens: true
 apply_downsample: false
 downsample_ratio: 0.2
 
@@ -59,7 +66,9 @@ run_wandb_sweep: false
 
 #pipeline specific modelling params
 #trainer initialiser
-trainer_type: base #different from model_type. Current Options[base, crf, weighted]
+trainer_type: base #different from model_type. Current Options[base, crf, weighted, focal]
+focal_loss_gamma: 2.0
+focal_loss_alpha: null #optional scalar or per-label list matching ner_tag_list order
 
 #model builder
 ner_head_type: standard #different from trainer_type. Current Options[standard, crf]
@@ -68,38 +77,44 @@ ner_head_type: standard #different from trainer_type. Current Options[standard, 
 use_data_aug: false
 data_aug_method: gazetteer
 max_ent_per_type: 5000
-aug_prob: 0.5
+aug_prob: 0.4
 
 #use_weighted_trainer: false
 
 
 #WANDB Sweeps config
+
 sweeps_config: 
-  name: CeLLaTeNerModel
-  method: bayes
+  name: CeLLaTe-ner-2class-models
+  method: random
   metric: 
-    name: eval_f1
+    name: eval_macro_f1
     goal: maximize
   parameters:
     learning_rate:
-      min: 5e-6
-      max: 1e-3
-      distribution: uniform
+      min: 2e-5
+      max: 5e-5
+      #values: [5e-6, 3e-5, 2e-5, 5e-5, 1e-5]
+      distribution: log_uniform_values
     train_batch_size:
       values: [16, 32]
     eval_batch_size:
-      value: 16
-    epochs: 
-      values: [10, 20, 50]
+      values: [16, 32]
+    seed:
+      values: [2026, 3407, 17, 10472999]
+    # epochs: 
+    #   values: [10, 20]
     weight_decay: 
-      values: [0.1, 0.01, 0.001]
+      values: [0.01, 0.05, 0.03]
     warmup_ratio:
-      min: 0.06
-      max: 0.2
-      #values: [0.06, 0.1, 0.02]
-      distribution: uniform
+      #min: 0.06
+      #max: 0.2
+      values: [0.06, 0.1, 0.01, 0.05, 0.03, 0.02]
+      #distribution: uniform
     lr_scheduler_type:
       values: ['linear', 'cosine']
+    use_data_aug: 
+      values: [true, false]
   early_terminate:
     type: hyperband
     min_iter: 3

@@ -1,0 +1,29 @@
+defaults:
+  - _self_
+  - logging: other_loggers
+  - task: ner_inference
+
+
+task_type: ${task.task_type}
+
+# Trainer.predict metric namespace
+metric_prefix_name: inference
+
+#finetuned model source path
+model_name_or_path: null 
+batch_size: 16
+#reproducibility seed
+seed: 42
+
+#weight and bias 
+use_wandb: false  
+
+hydra:
+  run:
+    dir: logs/hydra_logs/${hydra:runtime.choices.task}/${task.data.name}_${task.data.version}/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: ${task.data.name}/${task.data.version}
+    subdir: ${hydra.job.num}_${hydra.job.override_dirname}
+  job:
+    chdir: true
+  output_subdir: null

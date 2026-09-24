@@ -1,0 +1,65 @@
+
+task_type: mlm
+mlm_task_type: tapt
+
+
+#data
+data:
+  name: CeLLaTe
+  version: 2.0
+  hf_path: Mardiyyah/TAPT_CeLLaTe2.0
+  text_col: FullText
+  source_type: hf
+
+model_name_or_path: Mardiyyah/bioformer-16l-tokenizer-adapted
+tokenizer_name_or_path:  null #sometimes different from model if using an custom adapted tokenizer
+
+
+
+args:
+  learning_rate: ${lr}
+  per_device_train_batch_size: ${batch_size}
+  per_device_eval_batch_size: ${eval_batch_size}
+  num_train_epochs: ${num_epochs}
+  weight_decay: ${weight_decay}
+  warmup_ratio: ${warmup_ratio}
+  lr_scheduler_type: linear
+  gradient_accumulation_steps: 2
+  disable_tqdm: false
+  
+  dataloader_num_workers: 0 
+  overwrite_output_dir: true
+  dataloader_drop_last: false
+  save_total_limit: null
+  load_best_model_at_end: true
+  metric_for_best_model: eval_loss
+  max_grad_norm: 1.0
+  fp16: true
+  greater_is_better: false
+  adam_epsilon: ${..adam_epsilon}
+
+
+  save_steps: 500
+  eval_steps: 500
+  logging_steps: 500
+  logging_strategy: epoch
+  eval_strategy: epoch
+  save_strategy: epoch
+  seed: ${seed}
+  data_seed: ${seed}
+
+push_to_hub_kwargs: 
+  finetuned_from: ${..model_name_or_path}
+  tasks: fill-mask  
+  dataset: ${..data.hf_path} 
+  language: en
+  license: apache-2.0
+                
+
+do_group_text: true
+tokenizer_stride: 128
+use_whole_word_mask: false
+use_span_mask: false
+mlm_probability: 0.15
+classifier_dropout: 0.1
+adam_epsilon: 1e-6

@@ -1,21 +1,29 @@
+# @package _global_
+
+experiment_name: ${hydra:runtime.choices.task}
+dataset_name: ${hydra:runtime.choices.task.data.name}
+
 hydra:
   run:
-    dir: .
+    dir: run/${dataset_name}
+  sweep:
+    dir: multirun/${dataset_name}/${hydra.job.name}
+    subdir: ${hydra.job.num}_${hydra.job.override_dirname}
   job:
     chdir: True
   output_subdir: null
 
-  logging:
-    config:
-      version: 1
-      formatters:
-        simple:
-          format: "[%(asctime)s][%(levelname)s] %(message)s"
-      handlers:
-        file:
-          class: logging.FileHandler
-          formatter: simple
-          filename: ../logs/${hydra:runtime.choices.model}/hydra.log
-      root:
-        handlers: [file]
-        level: DEBUG
+  # logging:
+  #   config:
+  #     version: 1
+  #     formatters:
+  #       simple:
+  #         format: "[%(asctime)s][%(levelname)s] %(message)s"
+  #     handlers:
+  #       file:
+  #         class: logging.FileHandler
+  #         formatter: simple
+  #         filename: ${hydra.runtime.output_dir}/${hydra:runtime.choices.task.data.name}/hydra.log
+  #     root:
+  #       handlers: [file]
+  #       level: DEBUG
