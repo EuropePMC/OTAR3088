@@ -2,25 +2,19 @@ from dataclasses import asdict
 from loguru import logger
 from transformers.trainer_callback import EarlyStoppingCallback
 
-from ...shared.trainer_base import HFTrainingOrchestrator
-from .modelling import (BaseTrainer, 
-                        CRFTrainer, 
-                        CustomCallback)
-
-from .metrics import (NervaluateEvaluator, 
+from ner_pipeline.utils.common import set_seed
+from .ner_metrics import (NervaluateEvaluator, 
                     SeqevalLogger,
                     NervaluateLogger, 
                     decode_all_predictions)
 
-from .trainer_config import NerPredictions
-from .ner_factory import NerTrainerFactory
+from .ner_factory import NERPredictions
+from .ner_trainer_config import NERTrainerFactory
+
+from ...shared.trainer_base import HFTrainingOrchestrator
 
 
-from ner_pipeline.utils.common import set_seed
-
-
-
-class NerTrainingOrchestrator(HFTrainingOrchestrator):
+class NERTrainingOrchestrator(HFTrainingOrchestrator):
     def __init__(self, runner_conf):
         super().__init__(runner_conf)
         self.cfg = self.builder.cfg
@@ -31,6 +25,7 @@ class NerTrainingOrchestrator(HFTrainingOrchestrator):
         ner_head_type = self.cfg.task.ner_head_type
         if trainer_type == "crf" and ner_head_type != "crf":
             raise ValueError(f"Trainer type {trainer_type} is not compatible with model type {ner_head_type}")
+        
         
     def execute(self):
         super().execute()
@@ -51,7 +46,7 @@ class NerTrainingOrchestrator(HFTrainingOrchestrator):
                                                         trainer_kwargs.data_collator
 
                                                         )
-        TrainerClass = NerTrainerFactory.get_trainer_class(self.cfg.task.trainer_type)
+        TrainerClass = NERTrainerFactory.get_trainer_class(self.cfg.task.trainer_type)
 
         self.trainer = TrainerClass(**self.components.strategy_kwargs,
                                     train_dataset = train_dataset,
@@ -65,7 +60,7 @@ class NerTrainingOrchestrator(HFTrainingOrchestrator):
                                     )
 
     
-        early_stopping_callback = EarlyStoppingCallback(3)
+        early_stopping_callback = EarlyStoppingCallback(self.cfg.early_stopping_patience)
         self.trainer.add_callback(early_stopping_callback)
 
         for cb in self.components.callbacks:
@@ -87,7 +82,7 @@ class NerTrainingOrchestrator(HFTrainingOrchestrator):
                                             id2label=self.trainer.model.config.id2label
                                             )
         
-        ner_predictions = NerPredictions(
+        ner_predictions = NERPredictions(
                                 true_labels=true_labels,
                                 pred_labels=pred_labels,
                                 label_names=self.cfg.task.label_names
@@ -99,13 +94,6 @@ class NerTrainingOrchestrator(HFTrainingOrchestrator):
         evaluator = NervaluateEvaluator(ner_predictions)
         nervaluate_results = evaluator.run_evaluation()
 
-        # #compute metrics table for logging to wandb if enabled for run
-        # if self.wandb_run:
-        #     #seqeval table
-        #     self.seqeval_logger = SeqevalLogger(ner_predictions, self.wandb_run)
-
-        #     #nervaluate 
-        #     self.nervaluate_logger = NervaluateLogger(nervaluate_results, self.wandb_run)
         if self.wandb_run:
             return ner_predictions, nervaluate_results
         
@@ -130,7 +118,7 @@ class NerTrainingOrchestrator(HFTrainingOrchestrator):
         nervaluate_logger.log()
 
         #log model artifacts
-        if self.wandb_artifact is not None: 
+        if self.cfg.save_model_artifact and self.wandb_artifact is not None: 
             logger.info("Linking run to wandb registry")
             self.wandb_artifact.add_dir(local_path=self.best_ckpt_path,
                                         name="best_model_checkpoint_path_for_run")

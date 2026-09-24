@@ -18,7 +18,7 @@ from transformers import (Trainer,
                           )
 from transformers.trainer_utils import speed_metrics
 
-from .trainer_config import NerModelConfig
+from .ner_factory import NERModelConfig
 from ...shared.modelling_base import BuildModel
 from ...strategies.crf import BERTCRFForTokenClassification                     
 
@@ -27,7 +27,7 @@ from ...strategies.crf import BERTCRFForTokenClassification
 
 
 
-class BuildNerModel(BuildModel):
+class BuildNERModel(BuildModel):
     """
     Factory class for constructing NER models with configurable heads.
     Compatible with HF trainer, supports multiple NER head types
@@ -41,16 +41,13 @@ class BuildNerModel(BuildModel):
                     "crf": "_build_for_crf",
                 }
     
-    def __init__(self, model_config:NerModelConfig, build_for_hyperparam_tuning=False):
-        super().__init__(model_config)
+    def __init__(self, model_config:NERModelConfig, build_for_hyperparam_tuning=False):
+        super().__init__(model_config, build_for_hyperparam_tuning)
         self.ner_head_type = model_config.ner_head_type
         self.num_labels = model_config.num_labels
         self.label2id = model_config.label2id
         self.id2label = model_config.id2label
-        self.build_for_hyperparam_tuning = build_for_hyperparam_tuning
-
-        
-
+  
 
     def build(self):
         if self.ner_head_type not in self._MODEL_BUILDER:
@@ -88,7 +85,8 @@ class BuildNerModel(BuildModel):
         config = AutoConfig.from_pretrained(self.checkpoint,
                                             **self._get_common_kwargs()
                                             )
-
+        # model = AutoModelForTokenClassificationCRF.from_pretrained(self.checkpoint,
+        #                                                             config=config)
         base_model = AutoModel.from_pretrained(self.checkpoint)
 
         model = BERTCRFForTokenClassification(config)
@@ -126,7 +124,7 @@ class BuildNerModel(BuildModel):
 
 
 
-class BaseTrainer(Trainer):
+class BaseNERTrainer(Trainer):
     """
     Inherits from huggingface Trainer class. 
     Extends some core methods(evaluate, compute_loss),
@@ -196,8 +194,6 @@ class BaseTrainer(Trainer):
             ignore_keys=ignore_keys,
             metric_key_prefix=metric_key_prefix)
 
-        
-        #next lines are for regular evaluation loop 
         self.eval_predictions = output.predictions
         self.eval_label_ids = output.label_ids
 
@@ -243,9 +239,9 @@ class BaseTrainer(Trainer):
             self.epoch_labels.append(true_labels)
 
 
-class CRFTrainer(BaseTrainer):
+class CRFNERTrainer(BaseNERTrainer):
     """
-    Inherits from BaseTrainer.
+    Inherits from BaseNERTrainer.
     Adds CRF viberti decoding when using crf head for training
     """
     def __init__(self, *args, **kwargs):
@@ -273,8 +269,125 @@ class CRFTrainer(BaseTrainer):
         return model.crf.decode(logits, mask)
 
 
+class FocalLossNERTrainer(BaseNERTrainer):
+    """
+    Inherits from BaseNERTrainer.
+    Implements focal loss for token classification.
+    """
+    def __init__(
+        self,
+        *args,
+        focal_loss_gamma: float = 2.0,
+        focal_loss_alpha: Union[float, List[float], torch.Tensor, None] = None,
+        **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.focal_loss_gamma = focal_loss_gamma
+        self.focal_loss_alpha = focal_loss_alpha
+        self.ignore_index = -100
 
-class WeightedTrainer(BaseTrainer):
+    def compute_loss(self, model, inputs, return_outputs=False, *args, **kwargs):
+        labels = inputs.get("labels")
+
+        model_inputs = {k: v for k, v in inputs.items() if k != "labels"}
+        outputs = model(**model_inputs)
+        logits = self._fetch_logits(inputs, outputs)
+
+        loss = None
+        if labels is not None and logits is not None:
+            loss = self._compute_focal_loss(logits, labels)
+
+            preds = self._decode_predictions(logits)
+            self._compute_train_epoch_metrics(preds, labels)
+
+        if loss is not None:
+            self.epoch_loss.append(loss.item())
+
+        if return_outputs:
+            outputs = self._attach_loss_to_outputs(loss, logits, outputs)
+            return loss, outputs
+
+        return loss
+
+    def _fetch_logits(self, inputs, outputs):
+        if hasattr(outputs, "logits"):
+            logits = outputs.logits
+        elif isinstance(outputs, dict):
+            logits = outputs.get("logits")
+        else:
+            logits = outputs[0]
+
+        if logits is None:
+            output_keys = outputs.keys() if hasattr(outputs, "keys") else []
+            raise ValueError(
+                "The model did not return logits from the inputs, only the following keys: "
+                f"{','.join(output_keys)}. For reference, the inputs it received are {','.join(inputs.keys())}."
+            )
+
+        return logits
+
+    def _attach_loss_to_outputs(self, loss, logits, outputs):
+        if isinstance(outputs, dict):
+            outputs = dict(outputs)
+            outputs["loss"] = loss
+            return outputs
+
+        return (loss, logits)
+
+    def _compute_focal_loss(self, logits, labels):
+        num_labels = logits.shape[-1]
+        flat_logits = logits.reshape(-1, num_labels)
+        flat_labels = labels.reshape(-1)
+
+        active_mask = flat_labels != self.ignore_index
+        if not active_mask.any():
+            return flat_logits.sum() * 0.0
+
+        active_logits = flat_logits[active_mask]
+        active_labels = flat_labels[active_mask]
+
+        ce_loss = F.cross_entropy(
+            active_logits,
+            active_labels,
+            reduction="none"
+        )
+        pt = torch.exp(-ce_loss)
+        focal_loss = ((1.0 - pt) ** self.focal_loss_gamma) * ce_loss
+
+        alpha = self._get_alpha(active_labels, active_logits.device)
+        if alpha is not None:
+            focal_loss = alpha * focal_loss
+
+        return focal_loss.mean()
+
+    def _get_alpha(self, labels, device):
+        if self.focal_loss_alpha is None:
+            return None
+
+        if isinstance(self.focal_loss_alpha, (float, int)):
+            return torch.tensor(
+                self.focal_loss_alpha,
+                dtype=torch.float,
+                device=device
+            )
+
+        alpha = torch.as_tensor(
+            self.focal_loss_alpha,
+            dtype=torch.float,
+            device=device
+        )
+        num_labels = self.model.config.num_labels
+        if alpha.numel() != num_labels:
+            raise ValueError(
+                f"focal_loss_alpha must contain one value per label. "
+                f"Expected {num_labels}, got {alpha.numel()}."
+            )
+
+        return alpha.gather(0, labels)
+
+
+
+class WeightedNERTrainer(BaseNERTrainer):
     """
     Inherits from BaseTrainer.
     Implements class weighting technique
@@ -343,7 +456,7 @@ class WeightedTrainer(BaseTrainer):
 
 
 
-class CustomCallback(TrainerCallback):
+class NERTrainerCallback(TrainerCallback):
     def __init__(self, trainer) -> None:
         super().__init__()
         self._trainer = trainer
@@ -373,4 +486,3 @@ class CustomCallback(TrainerCallback):
         self.epoch_predictions = []
         self.epoch_labels = []
         self.epoch_loss = []
-

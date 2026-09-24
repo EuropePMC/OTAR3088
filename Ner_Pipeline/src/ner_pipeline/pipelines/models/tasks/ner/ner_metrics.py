@@ -1,6 +1,3 @@
-"""
-to move all ner metrics logic here including seqeval and nervaluate f
-"""
 
 from loguru import logger
 import wandb
@@ -13,32 +10,59 @@ from seqeval.metrics import classification_report
 import nervaluate
 from nervaluate import Evaluator
 
-from .trainer_config import NerPredictions
+from .ner_factory import NERPredictions
 from ...shared.metrics_base import WandbMetricsLogger
+
+
 
 
 def seqeval_metrics(label_list):
     metric = evaluate.load("seqeval")
+
     def compute_metrics(eval_preds):
         logits, labels = eval_preds
         predictions = np.argmax(logits, axis=-1)
-        true_labels = [[label_list[l] for l in label if l != -100] for label in labels]
+
+        true_labels = [
+            [label_list[l] for l in label if l != -100]
+            for label in labels
+        ]
         true_predictions = [
             [label_list[p] for (p, l) in zip(prediction, label) if l != -100]
             for prediction, label in zip(predictions, labels)
-            ]
+        ]
+
         results = metric.compute(predictions=true_predictions, references=true_labels)
+
         report = classification_report(true_labels, true_predictions)
-        logger.info(f"Eval Classification Report:\n {report}")
-        
+        logger.info(f"Eval Classification Report:\n{report}")
+
+        # collect per-entity class metrics
+        class_items = [
+            v for k, v in results.items()
+            if isinstance(v, dict) and k != "overall"
+        ]
+
+        # macro F1 = unweighted mean across entity classes
+        macro_f1 = float(np.mean([item["f1"] for item in class_items])) if class_items else 0.0
+
+        # weighted F1 = support-weighted mean across entity classes
+        total_support = sum(item["number"] for item in class_items)
+        weighted_f1 = (
+            sum(item["f1"] * item["number"] for item in class_items) / total_support
+            if total_support > 0 else 0.0
+        )
+
         return {
             "precision": results["overall_precision"],
             "recall": results["overall_recall"],
-            "f1": results["overall_f1"],
+            "micro_f1": results["overall_f1"],  
+            "weighted_f1": weighted_f1,        
+            "macro_f1": macro_f1,                 
             "accuracy": results["overall_accuracy"],
-            }
-    return compute_metrics
+        }
 
+    return compute_metrics
 
 def decode_all_predictions(logits, label_ids, id2label):
     preds = np.argmax(logits, axis=2)
@@ -61,7 +85,7 @@ def decode_all_predictions(logits, label_ids, id2label):
 
 
 class NervaluateEvaluator:
-    def __init__(self, ner_predictions: NerPredictions):
+    def __init__(self, ner_predictions: NERPredictions):
         self.true_labels = ner_predictions.true_labels
         self.pred_labels = ner_predictions.pred_labels
         self.label_names = ner_predictions.label_names
@@ -76,6 +100,7 @@ class NervaluateEvaluator:
                             )
 
         results = self.evaluator.evaluate()
+        logger.info(results)
         results_per_entity = results["entities"]
         self._log_to_cli()
 
@@ -104,7 +129,7 @@ class NervaluateEvaluator:
 
 
 class SeqevalLogger(WandbMetricsLogger):
-    def __init__(self, ner_predictions: NerPredictions, wandb_run):
+    def __init__(self, ner_predictions: NERPredictions, wandb_run):
         super().__init__(wandb_run)
         self.true_labels = ner_predictions.true_labels
         self.pred_labels = ner_predictions.pred_labels
