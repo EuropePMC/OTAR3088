@@ -2,12 +2,20 @@
 import os
 import math
 
+from typing import Union
+
+from enum import Enum
+from dataclasses import dataclass
+from abc import abstractmethod, ABC
+
 from omegaconf import DictConfig
 
 import torch
 import torch.nn as nn
 from datasets import Dataset, DatasetDict
-from transformers import TrainingArguments
+from transformers import (PreTrainedTokenizer, 
+                          PreTrainedTokenizerFast,
+                          TrainingArguments)
 
 
 
@@ -37,8 +45,8 @@ def format_model_checkpoint_name(ckpt:str):
 
     else:  
       base_name = base_name.split("-")
-      if len(base_name) >= 3:
-        ckpt_name = "_".join(base_name[:3])
+      if len(base_name) >= 10:
+        ckpt_name = "_".join(base_name[:8])
       else:
         ckpt_name = "_".join(base_name)
     return ckpt_name
@@ -46,13 +54,18 @@ def format_model_checkpoint_name(ckpt:str):
 
 
 def build_training_args(cfg:DictConfig, output_dir:str):
-  report_to = "wandb" if cfg.use_wandb else "none"
-  return TrainingArguments(
-      output_dir=output_dir,
-      logging_dir=f"{output_dir}/logs",
-      report_to = report_to,
-      **cfg.task.args
-  )
+    report_to = "wandb" if cfg.use_wandb else "none"
+    remove_unused_columns = True
+    if cfg.task_type.lower() == "mlm" and getattr(cfg.task, "use_whole_word_mask", False):
+        remove_unused_columns = False
+
+    return TrainingArguments(
+        output_dir=output_dir,
+        logging_dir=f"{output_dir}/logs",
+        report_to = report_to,
+        remove_unused_columns=remove_unused_columns,
+        **cfg.task.args
+    )
 
 
 def compute_training_steps(args:TrainingArguments, train_dataset:Dataset):
@@ -116,3 +129,159 @@ def extract_encoder_layers(model: nn.Module):
 
 def count_trainable_params(model: nn.Module):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
+
+class TrainingStrategyName(str, Enum):
+    "Training Strategy types"
+    BASE = "base"
+    REINIT = "reinit_only"
+    LLRD = "llrd_only"
+    REINIT_LLRD = "reinit_llrd"
+    GROUPED_LLRD = "grouped_llrd" 
+
+
+
+@dataclass
+class BaseTokenizationTransform(ABC):
+    """
+    Base tokenization transform.
+
+    Shared by task-specific tokenization transforms such as:
+    - NERTokenizationTransform
+    - MLMTokenizationTransform
+    """
+    tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast]
+    text_col: str
+    do_truncate: bool
+    max_length: int = 512
+
+    @abstractmethod
+    def __call__(self):
+        raise NotImplementedError("Subclasses must implement this method")
+
+
+
+@dataclass(frozen=True)
+class ReinitStrategyParams:
+    reinit_classifier: bool=False
+    reinit_k_layers: int=0
+
+    @classmethod
+    def from_cfg(cls, cfg: DictConfig):
+        reinit_classifier = getattr(cfg, "reinit_classifier", False)
+        reinit_k_layers = getattr(cfg, "reinit_k_layers", 0)
+        return cls(reinit_classifier=reinit_classifier, reinit_k_layers=reinit_k_layers)
+
+
+@dataclass(frozen=True)
+class LLRDStrategyParams:
+    llrd_factor: float=1.0
+
+    @classmethod
+    def from_cfg(cls, cfg: DictConfig):
+        llrd_factor = getattr(cfg, "llrd_factor", 1.0)
+        return cls(llrd_factor=llrd_factor)
+
+
+@dataclass(frozen=True)
+class ReinitLLRDStrategyParams(ReinitStrategyParams, LLRDStrategyParams):
+    reinit_classifier: bool=False
+    reinit_k_layers: int=0
+    llrd_factor: float=1.0
+    @classmethod
+    def from_cfg(cls, cfg: DictConfig):
+        return cls(
+            reinit_classifier=getattr(cfg, "reinit_classifier", False),
+            reinit_k_layers=getattr(cfg, "reinit_k_layers", 1),
+            llrd_factor=getattr(cfg, "llrd_factor", 1.0),
+        )
+
+
+class StrategyParamsMixin:
+    """
+    Shared Mixin class for resolving training-strategy parameters from cfg.
+
+    This mixin assumes the consuming class has:
+        self.cfg
+        self.training_strategy
+    """
+
+    def _get_reinit_params(self) -> ReinitStrategyParams:
+        return ReinitStrategyParams.from_cfg(self.cfg)
+    
+    def _get_llrd_params(self) -> LLRDStrategyParams:
+        return LLRDStrategyParams.from_cfg(self.cfg)
+    
+    def _get_reinit_llrd_params(self) -> ReinitLLRDStrategyParams:
+        return ReinitLLRDStrategyParams.from_cfg(self.cfg)
+
+
+
+@dataclass
+class BaseResolvedConfig(ABC):
+    """
+    Base resolved config dataclass.
+
+    Shared by task-specific resolved config dataclasses such as:
+    - NERResolvedConfig
+    - MLMResolvedConfig
+    """
+    cfg: DictConfig
+    dataset_label: str
+    model_architecture: str
+    task_type: str
+
+    @classmethod
+    def _common_kwargs(cls, cfg: DictConfig) -> dict:
+        task_cfg = cfg.task
+        task_type = task_cfg.task_type.lower()
+
+        dataset_name = task_cfg.data.name
+        dataset_version = getattr(task_cfg.data, "version", "")
+        dataset_label = f"{dataset_name}_{dataset_version}" if dataset_version else dataset_name
+
+        model_name_or_path = (
+            getattr(task_cfg, "model_name_or_path", None)
+            or getattr(cfg, "model_name_or_path", None)
+        )
+        model_architecture = format_model_checkpoint_name(model_name_or_path)
+
+        return {
+            "cfg": cfg,
+            "dataset_label": dataset_label,
+            "model_architecture": model_architecture,
+            "task_type": task_type,
+        }
+
+    @classmethod
+    def from_cfg(cls, cfg: DictConfig):
+        return cls(**cls._common_kwargs(cfg))      
+
+
+
+class BaseStrategyFactory(ABC):
+    _enum_class = TrainingStrategyName
+    _registry = {}
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+
+        if cls is BaseStrategyFactory:
+            return
+
+        if cls._registry is None:
+            raise TypeError(f"{cls.__name__} must define a `_registry` class attribute.")
+
+    @classmethod
+    def _get_strategy(cls, resolved_cfg: BaseResolvedConfig):
+        return cls._enum_class(resolved_cfg.training_strategy.lower())
+    
+    @classmethod
+    def create(cls, resolved_cfg: BaseResolvedConfig, *args, **kwargs):
+        strategy = cls._get_strategy(resolved_cfg)
+        target_cls = cls._registry[strategy]
+        print(f"Initialised Helper: {target_cls.__name__}()")
+        return target_cls(resolved_cfg, *args, **kwargs)
+
+

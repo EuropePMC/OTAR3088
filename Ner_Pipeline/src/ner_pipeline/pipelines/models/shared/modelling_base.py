@@ -18,16 +18,17 @@ from transformers import (Trainer,
                           DataCollatorForTokenClassification, 
                           AutoTokenizer)
 
-from .trainer_config_base import TrainingStrategyName, HFModelConfig
-from .factory import count_trainable_params
+from .trainer_config_base import HFModelConfig
+from .factory import count_trainable_params, TrainingStrategyName
 from ..strategies.reinit_llrd import ReinitLLRDProcessor
 
 
 class BuildModel(ABC):
     "Abstract class for initialising HF Based model"
-    def __init__(self, model_config:HFModelConfig):
+    def __init__(self, model_config:HFModelConfig, build_for_hyperparam_tuning=False):
         self.checkpoint = model_config.checkpoint
         self.device = model_config.device
+        self.build_for_hyperparam_tuning = build_for_hyperparam_tuning
 
     @abstractmethod
     def build(self):

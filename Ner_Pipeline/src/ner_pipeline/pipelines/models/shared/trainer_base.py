@@ -1,11 +1,15 @@
 from typing import Type, Optional
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
+
+from omegaconf import OmegaConf
 from loguru import logger
+
 from .metrics_base import MetricsLogger
-from .trainer_builder_base import HFTrainingCompBuilder
+from .trainer_builder_base import HFTrainingCompBuilder, HFInferenceCompBuilder
 from .trainer_config_base import BuildContext, PushToHubParams
 from ner_pipeline.utils.common import set_seed
+
 
 @dataclass(frozen=True)
 class HFTrainingOrchestratorConfig:
@@ -57,6 +61,19 @@ class HFTrainingOrchestratorConfig:
     publish_model: bool
     wandb_run: Optional[None]
     wandb_artifact: Optional[None]
+
+
+
+@dataclass(frozen=True)
+class HFInferenceOrchestratorConfig:
+    """
+    """
+  
+    context: Type[BuildContext]
+    builder: Type[HFInferenceCompBuilder] 
+    wandb_run: Optional[None]
+    wandb_artifact: Optional[None]
+
 
 
 
@@ -222,7 +239,11 @@ class HFTrainingOrchestrator(ABC):
         self.trainer.args.push_to_hub_model_id = self.hub_params.repo_id
         self.trainer.args.push_to_hub_token = self.hub_params.token
         logger.info(f"Repo ID: {self.trainer.args.hub_model_id}")
-        self.trainer.push_to_hub(self.hub_params.commit_message)
+
+        hub_kwargs = OmegaConf.to_container(self.builder.cfg.task.push_to_hub_kwargs, 
+                                            resolve=True)
+        hub_kwargs["commit_message"] = self.hub_params.commit_message
+        self.trainer.push_to_hub(**hub_kwargs)
 
     def _log_to_wandb(self):
         """
@@ -299,5 +320,114 @@ class HFTrainingOrchestrator(ABC):
             "best_checkpoint_path": self.best_ckpt_path,
             "trainer_log_history": self.trainer_log_history
         }
+
+    
+
+class HFInferenceOrchestrator(ABC):
+    """
+    """
+   
+
+    def __init__(self, runner_conf: HFInferenceOrchestratorConfig):
+        """
+
+        """
+
+        self.runner_conf = runner_conf
+        self.cfg = runner_conf.context.cfg
+        self.metric_prefix_name = getattr(self.cfg, "metric_prefix_name", "inference")
+        self.context = self.runner_conf.context
+        self.wandb_run = self.context.wandb_run
+        self.wandb_artifact = self.context.wandb_artifact
+        self.builder = self.runner_conf.builder
+        self.components = self.builder.build_components()
+        self.dataset = self.components.test_dataset
+        self.inference_trainer = None
+
+
+
+    def _validate_trainer_built(self):
+        if self.inference_trainer is None:
+            raise RuntimeError(
+                "Trainer not built. `_build_trainer()` must assign self.inference_trainer."
+            )
+
+
+    @abstractmethod
+    def _build_trainer(self):
+        """
+        Constructs HuggingFace Trainer instance.
+
+        Must be implemented by subclasses to define inference trainer initialisation logic.
+
+        Expected to assign:
+            self.inference_trainer
+        """
+
+        raise NotImplementedError("Subclass must implement `build_trainer` method")
+    
+    
+    def _run_inference(self, dataset, metric_key_prefix=None):
+        """
+        Executes model inference on test dataset.
+
+        Returns:
+            dict: Returns PredictionOutput with predictions(model's output),
+            label_ids(ground truth labels if present) and potential metrics dictionary(if label_ids is not none),
+            containing metrics as defined in `compute_metrics()`.
+        """
+        metric_key_prefix = metric_key_prefix or self.metric_prefix_name
+        logger.info("Running inference on dataset------>")
+        results = self.inference_trainer.predict(dataset, metric_key_prefix=metric_key_prefix)
+
+        logger.success("Inference completed")
+        if results.label_ids is not None:
+            logger.info(f"Prediction Metrics: {results.metrics}")
+
+        return results
+
+
+    def _log_to_wandb(self):
+        """
+        Optional log to wandb method.
+        Can be implemented by subclasses
+        """
+        pass
+
+
+    def execute(self):
+        """
+        Executes inference on test dataset with HF trainer.
+
+        """
+        
+        #set reproducibility seed
+        set_seed(self.builder.cfg.seed)
+
+        #build inference trainer
+        self._build_trainer()
+
+        self._validate_trainer_built()
+        
+        #init inference with trainer on dataset
+        self.results = self._run_inference(dataset=self.dataset,
+                                          metric_key_prefix=self.metric_prefix_name)
+
+        #log metrics
+        self.metrics_logger()
+
+
+        #optional experiment logging to WANDB
+        if self.builder.cfg.use_wandb:
+            self._log_to_wandb() 
+
+       
+        return 
+
+    def metrics_logger(self):
+        self.metrics = self.results.metrics
+        self.metrics["samples"] = len(self.dataset)
+        self.inference_trainer.log_metrics(self.metric_prefix_name, self.metrics)
+        self.inference_trainer.save_metrics(self.metric_prefix_name, self.metrics)
 
     

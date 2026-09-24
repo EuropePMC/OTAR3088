@@ -5,7 +5,7 @@ from typing import (
                     Type
                 )
             
-from enum import Enum
+from abc import ABC
 from dataclasses import field, dataclass
 from omegaconf import DictConfig
 
@@ -40,8 +40,7 @@ class BaseTrainerKwargs:
     processing_class : PreTrainedTokenizerBase | PreTrainedTokenizerFast
         Tokenizer used for preprocessing and postprocessing.
     """
-    train_dataset: Dataset
-    eval_dataset: Dataset
+
     model: nn.Module
     processing_class: Union[PreTrainedTokenizerBase, PreTrainedTokenizerFast]
     args: TrainingArguments
@@ -83,6 +82,7 @@ class BuildContext:
     wandb_run: Optional[WandbRun] = None
     wandb_artifact: Optional[WandbArtifact] = None
 
+
 @dataclass(kw_only=True)
 class HFTrainingComponents:
     trainer_kwargs: BaseTrainerKwargs
@@ -90,27 +90,56 @@ class HFTrainingComponents:
     metadata: Dict[str, Any] = field(default_factory=dict)
     callbacks: List[TrainerCallback] = field(default_factory=list)
 
+@dataclass(kw_only=True)
+class HFInferenceComponents:
+    test_dataset: Dataset
+    trainer_kwargs: BaseTrainerKwargs
+
 
 @dataclass
 class PushToHubParams:
-  "Default HF params"
-  repo_id:str
-  push_to_org_repo: bool = False
-  is_private: bool = False
-  token: str = None
-  commit_message: str = "Add model to hub"
-
-
-class TrainingStrategyName(str, Enum):
-    "Training Strategy types"
-    BASE = "base"
-    REINIT = "reinit_only"
-    LLRD = "llrd_only"
-    REINIT_LLRD = "reinit_llrd"
-    GROUPED_LLRD = "grouped_llrd" 
+    "Default HF params"
+    repo_id:str
+    push_to_org_repo: bool = False
+    is_private: bool = False
+    token: str = None
+    commit_message: str = "Add model to hub"
 
 
 @dataclass(kw_only=True)
 class HFModelConfig:
     checkpoint: str
     device: str
+
+
+class BaseTrainerFactory(ABC):
+    _enum_class = None
+    _registry = {}
+    
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+
+        if cls is BaseTrainerFactory:
+            return
+
+        missing = []
+        if cls._registry is None:
+            missing.append("_registry")
+        if cls._enum_class is None:
+            missing.append("_enum_class")
+
+        if missing:
+            raise TypeError(
+                f"{cls.__name__} must define: {', '.join(missing)}"
+            )
+
+    @classmethod
+    def get_trainer_class(cls, trainer_type:str):
+        """
+        Fetches and returns the trainer class associated with the requested trainer type.
+        """
+        trainer_name = cls._enum_class(trainer_type.lower())
+        trainer_cls = cls._registry[trainer_name]
+
+        return trainer_cls

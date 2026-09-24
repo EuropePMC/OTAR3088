@@ -4,9 +4,6 @@ from typing import List, Any, Dict, Optional
 from omegaconf import DictConfig
 
 from .modelling_base import TrainingStrategyFactory
-# from .metrics_logger import MetricsLogger
-
-# from .trainer_config_base import BuildComponents, BuildContext, BaseTrainerKwargs
 
 
 
@@ -16,6 +13,9 @@ class HFTrainingCompBuilder(ABC):
 
     @abstractmethod
     def _build_components(self):
+        raise NotImplementedError("Subclass must implement this method")
+
+    def _build_trainer_specific_kwargs(self):
         pass
 
     @abstractmethod
@@ -23,5 +23,12 @@ class HFTrainingCompBuilder(ABC):
         pass
 
 
-        
+class HFInferenceCompBuilder(ABC):
+    def __init__(self, context):
+        self.context = context
+
+    @abstractmethod
+    def build_components(self):
+        raise NotImplementedError("Subclass must implement this method")
+
 
