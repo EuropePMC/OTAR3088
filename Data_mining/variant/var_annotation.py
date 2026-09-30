@@ -13,6 +13,16 @@ HERE = os.path.dirname(os.path.abspath(__file__)) if '__file__' in dir() else os
 sys.path.insert(0, os.path.normpath(os.path.join(HERE, '../../../epmc-tools/europmc_dev_tool')))
 from spacy_patterns import patterns
 
+""" Search Europe PMC for open-access full-text papers (HAS_FT:Y AND OPEN_ACCESS:Y) 
+that contain a diverse range of genetic variant mention styles, including HGVS genomic/coding/protein mutations 
+(c., p., g.), dbSNP rsIDs (rs...), pharmacogenetic star alleles (e.g. CYP2D6*4), 
+ISCN cytobands (chr9q34.3 deletion), 
+and legacy/prefix-less mutations (e.g. 185delAG, V600E). 
+Return a list of representative PMCIDs. 
+Studying the types of variant described in the annotation guidelines SKILL.md
+TODO - Write up notes better, split skill into annotation guidelines and skill instruct 
+"""
+
 ## Papers sourced via Claude search in ePMC, selected for having a variety of styles of genetic variant mentions
 # PMC7334197,PMC12713268,PMC12465344,PMC12859152,PMC12874668,PMC4560075,PMC11354791,PMC8254301
 ## XL - 30 papers
